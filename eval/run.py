@@ -99,10 +99,24 @@ def run() -> int:
             miss = [n for n in EVAL["timeout_needles"] if n.lower() not in skill_text.lower()]
             results.append(fail(sid, f"missing={miss}") if miss else ok(sid))
         elif sc["expect"] == "skill_requires_opus_parent":
-            if "claude-opus-4-6" not in skill_text:
-                results.append(fail(sid, "SKILL.md must pin claude-opus-4-6 parent"))
+            if "agent-model-registry get claude" not in skill_text or "5.0" not in skill_text:
+                results.append(fail(sid, "parent must use registry get claude and refuse 5.0"))
             else:
                 results.append(ok(sid))
+        elif sc["expect"] == "registry_get_fable":
+            import shutil
+            import subprocess
+
+            bin_ = shutil.which("agent-model-registry")
+            if not bin_:
+                results.append(fail(sid, "agent-model-registry not on PATH"))
+            else:
+                p = subprocess.run([bin_, "get", "fable"], capture_output=True, text=True)
+                out = (p.stdout or "").strip()
+                if p.returncode != 0 or not out:
+                    results.append(fail(sid, f"get fable failed rc={p.returncode} {out!r}"))
+                else:
+                    results.append(ok(sid, out.splitlines()[-1]))
         elif sc["expect"] == "folder_matches_skill_name":
             if ROOT.name != EVAL["skill"]:
                 results.append(fail(sid, f"folder {ROOT.name!r} != name {EVAL['skill']!r}"))

@@ -11,11 +11,11 @@
     "페이블 자문",
     "점수 보고",
     "머지",
-    "claude-fable-5-thinking-high",
     "페이블 대신",
-    "grok으로 자문"
+    "grok으로 자문",
+    "agent-model-registry"
   ],
-  "override_needles": ["consult_model", "허용 목록"],
+  "override_needles": ["agent-model-registry", "get fable", "허용 목록"],
   "triggers_forbidden": ["expert consult", "second opinion"],
   "briefing_sections": ["원시 증거", "내 해석", "내 결론", "질문"],
   "open_question": "내가 놓친 카테고리는?",
@@ -28,6 +28,7 @@
     { "id": "digest-template", "type": "roundtrip", "expect": "digest_has_accept_reject_defer" },
     { "id": "spawn-slug", "type": "roundtrip", "expect": "skill_contains_fable_slug" },
     { "id": "consult-override", "type": "roundtrip", "expect": "skill_allows_consult_override" },
+    { "id": "registry-get-fable", "type": "roundtrip", "expect": "registry_get_fable" },
     { "id": "error-timeout", "type": "error", "expect": "skill_mentions_timeout_fallback" },
     { "id": "parent-model", "type": "roundtrip", "expect": "skill_requires_opus_parent" },
     {
