@@ -2,7 +2,7 @@
 
 English edition (`main`). Korean edition: branch [`ko`](https://github.com/dalsoop/opus-fable-orchestrator/tree/ko).
 
-**Parent model:** `/model claude-opus-4-6[1m]` — Opus 4.6 1M is the executor. Fable is read-only.
+**Parent model:** `/model claude-opus-4-6[1m]` — Opus 4.6 1M is the executor. Fable is read-only. **Do not use Opus 5.0 as the parent — error rate is high.**
 
 ```bash
 npx skills add dalsoop/opus-fable-orchestrator -g -y

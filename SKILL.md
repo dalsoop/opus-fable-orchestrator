@@ -15,7 +15,7 @@ description: >-
 
 # Opus-Fable Orchestrator
 
-**Parent model (required):** `/model claude-opus-4-6[1m]` before any work. The session executor is Opus 4.6 with 1M context. Fable is consult-only. Do not run this skill on a cheaper parent.
+**Parent model (required):** `/model claude-opus-4-6[1m]` before any work. The session executor is Opus 4.6 with 1M context. Fable is consult-only. Do not run this skill on a cheaper parent. **Do not use Opus 5.0 — error rate is high.**
 
 Executor writes and runs. Fable is read-only (no files, no tools). Parent stays executor.
 
