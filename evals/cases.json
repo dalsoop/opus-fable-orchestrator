@@ -1,5 +1,5 @@
 {
-  "skill": "opus-fable-orchestrator",
+  "skill": "orchestrator-consultant-gate",
   "notes": "Happy prompts must match description triggers. Negatives must not look like a score/merge/consult. Static gate is python3 eval/run.py.",
   "cases": [
     {
@@ -17,7 +17,7 @@
     {
       "id": "happy-03-swap-grok",
       "should_trigger": true,
-      "prompt": "opus-fable consult with grok instead of fable",
+      "prompt": "consultant gate with grok instead of fable",
       "checks": { "preserve_tokens": ["agent-model-registry"] }
     },
     {

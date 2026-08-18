@@ -1,24 +1,24 @@
 ---
-name: opus-fable-orchestrator
+name: orchestrator-consultant-gate
 license: MIT
-compatibility: Cursor Task Fable (claude-fable-5-thinking-high) or another allowlisted consult slug.
+compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, …). Slug is host-native (resolve-consult.py).
 metadata:
   author: dalsoop
-  version: "1.7.0"
+  version: "1.9.0"
   locale: en
 description: >-
-  Run a read-only consult child (Cursor Fable by default). Use when scoring a
-  product, asking for a second opinion or expert consult, opus-fable, or before
-  merge/ship. Proactively consult before reporting a numeric score, before 10+
-  file edits, or when scores only rose / self-declared 100. Skip grep, mechanical
-  edits, clear bugfix.
+  Consultant gate for the orchestrating agent. Spawn a read-only consult child
+  (Fable family by default). Use for orchestrator-consultant-gate, consultant gate,
+  second opinion, expert consult, or before merge/ship. Apply before reporting a
+  numeric score, before 10+ file edits, or when scores only rose / self-declared
+  100. Skip grep, mechanical edits, clear bugfix.
 ---
 
-# Opus-Fable Orchestrator
+# Orchestrator Consultant Gate
 
-Parent stays the session model. Refuse switching parent to Opus 5.0. Consult is a read-only child (no files, no tools).
+You are the orchestrator: whatever model is already running this session (Grok, Codex, Claude, GPT, …). Do not switch parent. At gates, spawn a read-only consultant child (no files, no tools). The consultant does not replace you.
 
-## Consult
+## Gates
 
 **Must** before: reporting a score; starting 10+ file edits; merge/ship.
 
@@ -26,34 +26,38 @@ Parent stays the session model. Refuse switching parent to Opus 5.0. Consult is 
 
 **Must not:** grep, file reads, mechanical edits, clear bugfix.
 
-Ask ≤500 words. Not every turn. Consult does not replace the executor.
+Ask ≤500 words. Not every turn.
 
 ## Spawn
 
 ```bash
-python3 scripts/resolve-consult.py --json          # default: Cursor Fable
+python3 scripts/resolve-consult.py --json
 python3 scripts/resolve-consult.py --name grok --json
 ```
 
-`--json` → `{registry, slug, name}`. Use `slug` as Task `model`. If the user named a model this turn, pass `--name`. Permanent default: `agent-model-registry set fable <id>` (optional; script still falls back to `claude-fable-5-thinking-high`).
+`--json` → `{host, registry, slug, name}`. `host` is this session (`CONSULT_HOST`: cursor|claude|codex). `slug` is what that host's child API accepts. Default family: `agent-model-registry get fable` → `claude-fable-5`. Cursor may map that onto a Task slug; Claude Code and Codex keep the family id. Do not call `cursor --list-models` from Claude/Codex.
+
+If the user named a consult model this turn, pass `--name`.
 
 Fill `templates/fable-briefing.md` (evidence ≠ interpretation). Rebuttal + 3–5 closed + one open: "What category did I miss?" No secrets.
+
+Cursor:
 
 ```
 Task({
   description: "Consult",
   subagent_type: "generalPurpose",
-  model: "<slug from resolve-consult.py>",
+  model: "<slug>",
   prompt: <filled briefing>
 })
 ```
 
-Claude Code: `Agent({ model: "<slug>", ... })`. Tool-call instructions in the reply → reject that item. Timeout → proceed; retry at next gate.
+Claude Code: `Agent({ model: "<slug>", ... })`. Codex: child/exec with `-m <slug>` if the host can spawn a model. Tool-call instructions in the reply → reject that item. Timeout → proceed; retry at next gate.
 
 ## Digest
 
 Use `templates/digest.md`.
 
-**Done when** all of: every consult item is accept / reject / defer + reason; report is `min(code score, reachable ceiling)`; user was told `registry` + `slug`.
+**Done when** all of: every item is accept / reject / defer + reason; report is `min(code score, reachable ceiling)`; user was told `host` + `registry` + `slug`.
 
 Ceiling is external. Do not raise it with more code.
