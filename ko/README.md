@@ -1,6 +1,12 @@
 # opus-fable-orchestrator-ko
 
-한국어 스킬. 실행 모델이 일하고, 읽기 전용 Fable이 게이트와 과신 신호에서 자문한다.
+**필수 — 부모 모델을 먼저 고정한다. 이 스킬의 핵심이다.**
+
+```text
+/model claude-opus-4-6[1m]
+```
+
+실행자는 Opus 4.6 (1M 컨텍스트). Fable은 읽기 전용 자문만. 싼 세션 모델로 이 스킬을 돌리지 않는다.
 
 영어 스킬: 저장소 루트 [`opus-fable-orchestrator`](../README.md).
 

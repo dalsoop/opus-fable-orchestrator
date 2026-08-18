@@ -14,7 +14,9 @@ description: >-
 
 # Opus-Fable Orchestrator
 
-Executor writes and runs. Fable is read-only (no files, no tools). Parent stays executor. Host model need not be named Opus.
+**Parent model (required):** `/model claude-opus-4-6[1m]` before any work. The session executor is Opus 4.6 with 1M context. Fable is consult-only. Do not run this skill on a cheaper parent.
+
+Executor writes and runs. Fable is read-only (no files, no tools). Parent stays executor.
 
 Korean user or Korean triggers → `opus-fable-orchestrator-ko`. Do not mix languages in one brief.
 

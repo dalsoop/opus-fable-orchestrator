@@ -13,7 +13,9 @@ description: >-
 
 # Opus-Fable Orchestrator (한국어)
 
-실행자가 쓰고 돌린다. Fable은 읽기 전용(파일·도구 없음). 부모 에이전트가 실행자다. 호스트 모델 이름이 Opus일 필요는 없다.
+**부모 모델 (필수):** 작업 전에 `/model claude-opus-4-6[1m]`. 세션 실행자는 Opus 4.6 1M. Fable은 자문만. 싼 부모 모델로 돌리지 않는다.
+
+실행자가 쓰고 돌린다. Fable은 읽기 전용(파일·도구 없음). 부모 에이전트가 실행자다.
 
 영어 사용자·영어 트리거 → `opus-fable-orchestrator`. 한 브리핑에 한 언어.
 
