@@ -1,22 +1,22 @@
 ---
 name: orchestrator-consultant-gate
 license: MIT
-compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, …). Slug is host-native (resolve-consult.py).
+compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, …).
 metadata:
   author: dalsoop
-  version: "1.9.2"
+  version: "1.9.3"
   locale: en
 description: >-
-  Consultant gate for the orchestrating agent. Spawn a read-only consult child
-  (Fable family by default). Use for orchestrator-consultant-gate, consultant gate,
-  second opinion, expert consult, or before merge/ship. Apply before reporting a
-  numeric score, before 10+ file edits, or when scores only rose / self-declared
-  100. Skip grep, mechanical edits, clear bugfix.
+  Ask a read-only second opinion before you score, merge, or ship, without
+  switching the session agent. Use for orchestrator-consultant-gate, consultant
+  gate, expert consult, or before merge/ship. Apply before reporting a numeric
+  score, before 10+ file edits, or when scores only rose / self-declared 100.
+  Skip grep, mechanical edits, clear bugfix.
 ---
 
 # Orchestrator Consultant Gate
 
-You are the orchestrator: whatever model is already running this session (Grok, Codex, Claude, GPT, …). Do not switch parent. At gates, spawn a read-only consultant child (no files, no tools). The consultant does not replace you.
+You are the agent currently running this session (Grok, Codex, Claude, GPT, …). Do not switch parent. At gates, ask a read-only consultant (no files, no tools). The consultant does not replace you.
 
 ## Gates
 
@@ -24,7 +24,7 @@ You are the orchestrator: whatever model is already running this session (Grok, 
 
 **Must** if 2+ of: scores only rose; self-declared 100 / "done" / "complete"; no evidence outside diffs; same agent wrote and scored.
 
-**Must not:** grep, file reads, mechanical edits, clear bugfix.
+**Must not:** routine lookup (`grep`, file reads), mechanical edits, clear bugfix.
 
 Ask ≤500 words. Not every turn.
 
@@ -35,7 +35,7 @@ python3 scripts/resolve-consult.py --json
 python3 scripts/resolve-consult.py --name grok --json
 ```
 
-`--json` → `{host, registry, slug, name}`. `host` is this session (`CONSULT_HOST`: cursor|claude|codex). `slug` is what that host's child API accepts. Default family: `agent-model-registry get fable` → `claude-fable-5`. Cursor may map that onto a Task slug; Claude Code and Codex keep the family id. Do not call `cursor --list-models` from Claude/Codex.
+`--json` → `{host, registry, slug, name}`. `host` is this session (`CONSULT_HOST`: cursor|claude|codex). Use `slug` as the child model id. Default consult family: `agent-model-registry get fable` → `claude-fable-5`. Cursor may map that onto a Task slug; Claude Code and Codex keep the family id. Do not call `cursor --list-models` from Claude/Codex.
 
 If the user named a consult model this turn, pass `--name`.
 

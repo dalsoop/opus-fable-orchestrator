@@ -1,6 +1,6 @@
 # orchestrator-consultant-gate
 
-Consultant gate for the orchestrating agent. Session model stays. Read-only child at score/merge gates.
+Get an independent, read-only second opinion before you score, merge, ship, or make a large change—without changing the agent running your session.
 
 English (`main`). Korean: branch [`ko`](https://github.com/dalsoop/orchestrator-consultant-gate/tree/ko).
 
@@ -14,7 +14,7 @@ EVAL_LIVE=1 python3 eval/run.py   # host roundtrip; skips if Cursor workspace tr
 Korean: `npx skills add dalsoop/orchestrator-consultant-gate@ko -g -y`
 
 <p align="center">
-  <img src="assets/how-the-gate-works-en.png" alt="Orchestrator consultant gate" width="920">
+  <img src="assets/how-the-gate-works-en.png" alt="Read-only second opinion before score or merge" width="920">
 </p>
 
 [`SKILL.md`](SKILL.md) · [`templates/`](templates/) · [`scripts/`](scripts/) · [`eval/`](eval/) · MIT
