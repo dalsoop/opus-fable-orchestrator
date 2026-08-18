@@ -4,7 +4,7 @@ license: MIT
 compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, …).
 metadata:
   author: dalsoop
-  version: "1.10.0"
+  version: "1.11.0"
   locale: en
 description: >-
   Ask a read-only second opinion before you score, merge, or ship, without
@@ -41,9 +41,9 @@ python3 scripts/resolve-consult.py --name gpt --json
 python3 scripts/resolve-consult.py --name gemini --json
 ```
 
-Default family: `agent-model-registry get fable` → `claude-fable-5` (if the CLI is missing, the script still prints that family). `--json` → `{host, registry, slug, name}`. `CONSULT_HOST`: cursor|claude|codex. Use `slug`. Cursor may map onto a Task slug. Do not call `cursor --list-models` from Claude/Codex.
+Default family: `agent-model-registry get fable` → `claude-fable-5` (if the CLI is missing, the script still prints that family). `--json` → `{host, registry, slug, name, fallback_slug, spawn, read_only}`. `CONSULT_HOST`: cursor|claude|codex. Use `slug`. Cursor may map onto a Task slug. Do not call `cursor --list-models` from Claude/Codex.
 
-If spawn is **blocked** (data policy, HTTP 402): `--name grok` once, or skip and retry at the next gate. Do not stall.
+If spawn is **blocked** (Cursor Review Data Policy, HTTP 402): spawn `fallback_slug` once, or `--name grok`. Else skip and retry at the next gate. Do not stall.
 
 Fill `templates/fable-briefing.md` with the plan (evidence ≠ interpretation). Rebuttal + 3–5 closed + one open: "What category did I miss?" No secrets.
 
@@ -51,4 +51,9 @@ Cursor: `Task({ description: "Consult", subagent_type: "generalPurpose", model: 
 
 ## Digest
 
-`templates/digest.md`. Done when every item is accept / reject / defer + reason; report `min(code score, reachable ceiling)`; user hears `host` + `registry` + `slug`. Ceiling is external.
+`templates/digest.md`. Done when every item is accept / reject / defer + reason; report `min(code score, reachable ceiling)`; user hears `host` + `registry` + `slug` + `spawn_ok` + `read_only` + `fallback_used`. Ceiling is external. Do not add a files score to a live-spawn score.
+
+```bash
+python3 scripts/resolve-consult.py --record --ok --read-only
+python3 scripts/resolve-consult.py --record --ok --read-only --fallback-used
+```

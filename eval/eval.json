@@ -17,6 +17,7 @@
   "briefing_sections": ["Raw evidence", "My interpretation", "My conclusion", "Questions"],
   "open_question": "What category did I miss?",
   "timeout_needles": ["Timeout", "retry"],
+  "observability_needles": ["--record", "fallback_slug"],
   "parent_needles": ["Do not switch parent", "Grok", "Codex"],
   "parent_forbidden": [],
   "scenarios": [
@@ -37,6 +38,7 @@
     { "id": "resolve-host", "type": "roundtrip", "expect": "resolve_reports_host" },
     { "id": "consult-other-models", "type": "roundtrip", "expect": "skill_names_other_consults" },
     { "id": "resolve-grok", "type": "roundtrip", "expect": "resolve_named_consult" },
+    { "id": "observability", "type": "roundtrip", "expect": "skill_mentions_observability" },
     {
       "id": "live-fable-roundtrip",
       "type": "roundtrip",
