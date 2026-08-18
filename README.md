@@ -8,12 +8,9 @@ Opus executes. Fable advises. A **circuit breaker** forces consultation when the
   <img src="assets/how-opus-fable-works-en.png" alt="How Opus–Fable works" width="920">
 </p>
 
-<details>
-<summary>한국어 다이어그램</summary>
 <p align="center">
   <img src="assets/how-opus-fable-works-ko.png" alt="OPUS–FABLE 작동 원리" width="920">
 </p>
-</details>
 
 Agent skill for [Cursor](https://cursor.com), [Claude Code](https://claude.ai/code), and similar hosts that can spawn a Fable (or equivalent) subagent.
 
