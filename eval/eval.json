@@ -28,6 +28,8 @@
     { "id": "resolve-script", "type": "roundtrip", "expect": "resolve_consult_script" },
     { "id": "error-timeout", "type": "error", "expect": "skill_mentions_timeout_fallback" },
     { "id": "parent-model", "type": "roundtrip", "expect": "skill_requires_opus_parent" },
+    { "id": "readme-for-agents", "type": "roundtrip", "expect": "readme_for_agents" },
+    { "id": "readme-both-diagrams", "type": "roundtrip", "expect": "readme_both_diagrams" },
     {
       "id": "live-fable-roundtrip",
       "type": "roundtrip",
