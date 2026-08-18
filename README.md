@@ -14,10 +14,10 @@ EVAL_LIVE=1 python3 eval/run.py
 영어: `npx skills add dalsoop/orchestrator-consultant-gate -g -y`
 
 <p align="center">
-  <img src="assets/how-the-gate-works-ko.png" alt="AI 1이 계획을 쓰고, 실행 전 GATE, AI 2가 읽기 전용 검수" width="920">
+  <img src="assets/how-the-gate-works-ko.png" alt="실행 모델, 게이트, 자문 모델" width="920">
 </p>
 
-AI 1이 **계획**을 씀. **GATE**는 실행 전. AI 2가 **검수**(읽기 전용). 의견이 돌아옴.
+**실행 모델**(이 세션) → **게이트**(점수 전 / 10파일 전 / 머지 전) → **자문 모델**(읽기 전용).
 
 자문 자식은 실행 모델과 다른 모델이다. 기본 계열은 `fable` → `claude-fable-5`. 이번 턴에 바꾸려면 `--name grok`, `--name gpt`, `--name gemini`.
 
