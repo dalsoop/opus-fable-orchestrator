@@ -14,10 +14,10 @@ EVAL_LIVE=1 python3 eval/run.py   # host roundtrip; skips if Cursor workspace tr
 Korean: `npx skills add dalsoop/orchestrator-consultant-gate@ko -g -y`
 
 <p align="center">
-  <img src="assets/how-the-gate-works-en.png" alt="Executor model, then gate, then consult model" width="920">
+  <img src="assets/how-the-gate-works-en.png" alt="One AI writes the plan. Another AI reviews it." width="920">
 </p>
 
-**Executor model** (this session) → **Gate** (before score / 10 files / merge) → **Consult model** (read-only).
+One AI writes the **plan**. **GATE** before work. The other AI **reviews** it read-only. Notes go back. Same session.
 
 The consult child is a different model from the executor. Default family is `fable` → `claude-fable-5`. This turn, pick another with `--name grok`, `--name gpt`, or `--name gemini`.
 
