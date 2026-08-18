@@ -248,6 +248,28 @@ def run() -> int:
                     results.append(fail(sid, f"slug not fable: {slug!r}"))
                 else:
                     results.append(ok(sid, f"{host}:{slug}"))
+        elif sc["expect"] == "skill_names_other_consults":
+            miss = [n for n in ("--name grok", "--name gpt", "--name gemini") if n not in skill_text]
+            results.append(fail(sid, f"missing={miss}") if miss else ok(sid))
+        elif sc["expect"] == "resolve_named_consult":
+            import subprocess
+
+            script = ROOT / "scripts" / "resolve-consult.py"
+            p = subprocess.run(
+                [sys.executable, str(script), "--name", "grok", "--json"],
+                capture_output=True,
+                text=True,
+            )
+            try:
+                data = json.loads(p.stdout)
+            except json.JSONDecodeError:
+                results.append(fail(sid, f"not json: {p.stdout!r}"))
+            else:
+                slug = data.get("slug") or ""
+                if p.returncode != 0 or data.get("name") != "grok" or not slug:
+                    results.append(fail(sid, f"rc={p.returncode} {data!r}"))
+                else:
+                    results.append(ok(sid, slug))
         else:
             results.append(fail(sid, f"unknown expect {sc.get('expect')}"))
 

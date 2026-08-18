@@ -21,6 +21,12 @@
       "checks": { "preserve_tokens": ["agent-model-registry"] }
     },
     {
+      "id": "happy-04-swap-gpt",
+      "should_trigger": true,
+      "prompt": "expert consult before merge — spawn gpt as the consult model",
+      "checks": { "preserve_tokens": ["consult"] }
+    },
+    {
       "id": "neg-01-grep",
       "should_trigger": false,
       "prompt": "grep the repo for TODO",

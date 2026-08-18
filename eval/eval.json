@@ -35,6 +35,8 @@
     { "id": "readme-not-skill", "type": "roundtrip", "expect": "readme_not_a_skill" },
     { "id": "readme-locale-diagram", "type": "roundtrip", "expect": "readme_locale_diagram" },
     { "id": "resolve-host", "type": "roundtrip", "expect": "resolve_reports_host" },
+    { "id": "consult-other-models", "type": "roundtrip", "expect": "skill_names_other_consults" },
+    { "id": "resolve-grok", "type": "roundtrip", "expect": "resolve_named_consult" },
     {
       "id": "live-fable-roundtrip",
       "type": "roundtrip",

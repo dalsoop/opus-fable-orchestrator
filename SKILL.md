@@ -4,7 +4,7 @@ license: MIT
 compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, …).
 metadata:
   author: dalsoop
-  version: "1.9.4"
+  version: "1.9.5"
   locale: en
 description: >-
   Ask a read-only second opinion before you score, merge, or ship, without
@@ -16,7 +16,15 @@ description: >-
 
 # Orchestrator Consultant Gate
 
-You are the agent currently running this session (Grok, Codex, Claude, GPT, …). Do not switch parent. At gates, ask a read-only consultant (no files, no tools). The consultant does not replace you.
+You are the **executor model** in this session (Grok, Codex, Claude, GPT, …). Do not switch parent.
+
+Flow: **executor model → gate → consult model**. The consult model is read-only (no files, no tools). It does not replace you.
+
+## Flow
+
+1. **Executor model** — already running this session. Writes and runs.
+2. **Gate** — before score; before 10+ file edits; before merge/ship.
+3. **Consult model** — read-only second opinion.
 
 ## Gates
 
@@ -28,27 +36,26 @@ You are the agent currently running this session (Grok, Codex, Claude, GPT, …)
 
 Ask ≤500 words. Not every turn.
 
-## Optional models
+## Consult model
 
-Only if the user is choosing models this turn. Otherwise keep the session agent.
+Keep the executor. Resolve a **different** model for the child.
 
-| Role | Model | Value |
-|---|---|---|
-| Executor | Opus 4.6 (**not** Opus 5.0) | Writes and runs. Cheaper than 5.0 for the same job. Do not switch the parent to 5.0 to use this skill. |
-| Consult | Fable 5 | Short read-only judgment. Expensive per token — cap length, never use as the executor. |
-
-## Spawn
+Default consult family: `agent-model-registry get fable` → `claude-fable-5`.
 
 ```bash
 python3 scripts/resolve-consult.py --json
 python3 scripts/resolve-consult.py --name grok --json
+python3 scripts/resolve-consult.py --name gpt --json
+python3 scripts/resolve-consult.py --name gemini --json
 ```
 
-`--json` → `{host, registry, slug, name}`. `host` is this session (`CONSULT_HOST`: cursor|claude|codex). Use `slug` as the child model id. Default consult family: `agent-model-registry get fable` → `claude-fable-5`. Cursor may map that onto a Task slug; Claude Code and Codex keep the family id. Do not call `cursor --list-models` from Claude/Codex.
+`--json` → `{host, registry, slug, name}`. `host` is this session (`CONSULT_HOST`: cursor|claude|codex). Use `slug` as the child model id. Cursor may map the family onto a Task slug; Claude Code and Codex keep the family id. Do not call `cursor --list-models` from Claude/Codex.
 
-If the user named a consult model this turn, pass `--name`.
+If the user named a consult model this turn, pass `--name` (registry key or a host slug).
 
 Fill `templates/fable-briefing.md` (evidence ≠ interpretation). Rebuttal + 3–5 closed + one open: "What category did I miss?" No secrets.
+
+## Spawn
 
 Cursor:
 
