@@ -4,7 +4,7 @@ license: MIT
 compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, …). Slug is host-native (resolve-consult.py).
 metadata:
   author: dalsoop
-  version: "1.9.0"
+  version: "1.9.1"
   locale: en
 description: >-
   Consultant gate for the orchestrating agent. Spawn a read-only consult child

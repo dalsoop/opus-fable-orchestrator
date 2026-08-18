@@ -19,4 +19,4 @@ Korean: `npx skills add dalsoop/orchestrator-consultant-gate@ko -g -y`
 
 [`SKILL.md`](SKILL.md) · [`templates/`](templates/) · [`scripts/`](scripts/) · [`eval/`](eval/) · MIT
 
-Was `opus-fable-orchestrator`. Not in `host-skills` catalog. Optional: `agent-model-registry set fable <id>`.
+Not in `host-skills` catalog. Optional: `agent-model-registry set fable <id>`.

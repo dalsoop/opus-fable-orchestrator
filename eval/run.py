@@ -191,6 +191,12 @@ def run() -> int:
                 results.append(fail(sid, f"missing REBUT_OK {out[-800:]}"))
             else:
                 results.append(ok(sid, f"{host}:{slug}"))
+        elif sc["expect"] == "no_legacy_skill_name":
+            blob = skill_text + "\n" + (ROOT / "README.md").read_text(encoding="utf-8")
+            if "opus-fable-orchestrator" in blob:
+                results.append(fail(sid, "legacy skill name still present"))
+            else:
+                results.append(ok(sid))
         elif sc["expect"] == "readme_not_a_skill":
             readme = (ROOT / "README.md").read_text(encoding="utf-8")
             if "For agents" in readme or "에이전트 전용" in readme:
