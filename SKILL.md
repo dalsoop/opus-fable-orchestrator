@@ -4,7 +4,7 @@ license: MIT
 compatibility: 읽기 전용 자식을 띄울 수 있는 호스트(Cursor Task, Claude Code Agent, Codex, …). slug는 호스트 고유(resolve-consult.py).
 metadata:
   author: dalsoop
-  version: "1.9.1"
+  version: "1.9.2"
   locale: ko
 description: >-
   오케스트레이션하는 에이전트를 위한 컨설턴트 게이트. 읽기 전용 자문 자식을 연다(기본은

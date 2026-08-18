@@ -19,4 +19,6 @@ EVAL_LIVE=1 python3 eval/run.py
 
 [`SKILL.md`](SKILL.md) · [`templates/`](templates/) · [`scripts/`](scripts/) · [`eval/`](eval/) · MIT
 
+[![skills.sh](https://skills.sh/b/dalsoop/orchestrator-consultant-gate)](https://skills.sh/dalsoop/orchestrator-consultant-gate)
+
 `host-skills` 카탈로그 밖. 선택: `agent-model-registry set fable <id>`.

@@ -32,6 +32,7 @@
     { "id": "error-timeout", "type": "error", "expect": "skill_mentions_timeout_fallback" },
     { "id": "parent-model", "type": "roundtrip", "expect": "skill_keeps_session_parent" },
     { "id": "cutoff-old-name", "type": "roundtrip", "expect": "no_legacy_skill_name" },
+    { "id": "cases-happy", "type": "trigger", "expect": "cases_happy_hit_description" },
     { "id": "readme-not-skill", "type": "roundtrip", "expect": "readme_not_a_skill" },
     { "id": "readme-locale-diagram", "type": "roundtrip", "expect": "readme_locale_diagram" },
     { "id": "resolve-host", "type": "roundtrip", "expect": "resolve_reports_host" },
