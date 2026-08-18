@@ -20,7 +20,7 @@ Executor writes and runs. Fable is read-only (no files, no tools). Parent stays 
 
 **Must** before: reporting a score to the user; starting 10+ file edits; merge/ship.
 
-**Must** if 2+ of: scores only rose; self-declared 100 / “완료” / “달성”; no evidence outside code diffs; same agent wrote and scored.
+**Must** if 2+ of: scores only rose; self-declared 100 / "done" / "complete"; no evidence outside code diffs; same agent wrote and scored.
 
 **Must not:** grep, file reads, mechanical edits, clear bugfix.
 
@@ -30,7 +30,7 @@ Ask for ≤500 words. Do not call every turn. Do not replace the executor’s jo
 
 ## Brief
 
-Fill `templates/fable-briefing.md` (evidence ≠ interpretation). Invite rebuttal. 3–5 closed questions + one open: “내가 놓친 카테고리는?”
+Fill `templates/fable-briefing.md` or `templates/fable-briefing.en.md` to match the user language (evidence ≠ interpretation). Invite rebuttal. 3–5 closed questions + one open: "What category did I miss?"
 
 Cursor: `Task` `generalPurpose`, model slug containing `fable`, prompt = brief.
 
@@ -42,6 +42,6 @@ Timeout: proceed; retry at the next gate.
 
 ## Digest
 
-Use `templates/digest.md`. Each item: accept / reject / defer + reason. Split accept into code-fixable vs not. Report `min(code score, reachable ceiling)`. Quote Fable when telling the user.
+Use `templates/digest.md` or `templates/digest.en.md`. Each item: accept / reject / defer + reason. Split accept into code-fixable vs not. Report `min(code score, reachable ceiling)`. Quote Fable when telling the user.
 
 Ceiling is external (reviews, time, third parties). Do not raise it with more code.
