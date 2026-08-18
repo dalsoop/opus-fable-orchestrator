@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Print the Cursor Task slug for a read-only consult child.
+"""Print a host-native model slug for a read-only consult child.
 
-Default is Cursor CLI Fable (`claude-fable-5-thinking-high`).
-If agent-model-registry is on PATH, its id is mapped onto the allowlist
-(exact, then prefix, then contains). Missing registry is not an error.
+Family id: agent-model-registry `get fable` (fallback `claude-fable-5`).
+Host: CONSULT_HOST, else this session (CURSOR_AGENT / CLAUDECODE / Codex).
+Cursor Task slugs are used only when the host is Cursor. Never treat a
+random `agent` binary on PATH as Cursor.
 """
 
 from __future__ import annotations
@@ -15,19 +16,8 @@ import shutil
 import subprocess
 import sys
 
-CURSOR_FABLE = "claude-fable-5-thinking-high"
-DEFAULT_ALLOW = [
-    "claude-fable-5-thinking-high",
-    "claude-opus-5-thinking-high",
-    "claude-sonnet-5-thinking-high",
-    "cursor-grok-4.5-high-fast",
-    "cursor-grok-4.6-medium",
-    "gemini-3.7-flash-high",
-    "gpt-5.6-sol-medium",
-    "gpt-5.6-terra-medium",
-    "composer-2.5-fast",
-    "inherit",
-]
+FAMILY = "claude-fable-5"
+HOSTS = ("cursor", "claude", "codex")
 
 
 def registry_get(name: str) -> str | None:
@@ -41,38 +31,89 @@ def registry_get(name: str) -> str | None:
     return line.splitlines()[-1].strip() if line else None
 
 
+def detect_host() -> str:
+    raw = os.environ.get("CONSULT_HOST", "").strip().lower()
+    if raw in HOSTS:
+        return raw
+    if os.environ.get("CURSOR_AGENT") == "1" or os.environ.get("CURSOR_INVOKED_AS"):
+        return "cursor"
+    if os.environ.get("CLAUDECODE") in ("1", "true") or os.environ.get("CLAUDE_CODE"):
+        return "claude"
+    if os.environ.get("CODEX_THREAD_ID") or os.environ.get("CODEX_INTERNAL_ORIGINATOR_OVERRIDE"):
+        return "codex"
+    return "unknown"
+
+
+def parse_slugs(text: str) -> list[str]:
+    slugs: list[str] = []
+    for line in text.splitlines():
+        token = line.strip().split()[0] if line.strip() else ""
+        if token and token[0].isalpha() and "-" in token:
+            slugs.append(token)
+    return slugs
+
+
+def list_cursor_models() -> list[str]:
+    bin_ = shutil.which("cursor")
+    if not bin_:
+        return []
+    p = subprocess.run([bin_, "--list-models"], capture_output=True, text=True, timeout=30)
+    if p.returncode != 0 or not (p.stdout or "").strip():
+        return []
+    return parse_slugs(p.stdout)
+
+
+def allowlist(host: str) -> list[str]:
+    env = [x.strip() for x in os.environ.get("CONSULT_ALLOWLIST", "").split(",") if x.strip()]
+    if env:
+        return env
+    if host == "cursor":
+        return list_cursor_models()
+    return []
+
+
 def map_to_allowlist(rid: str, allow: list[str]) -> str | None:
+    if not allow:
+        return rid
     if rid in allow:
         return rid
     for a in allow:
         if a.startswith(rid) or rid in a:
             return a
     key = rid.lower()
-    for needle, pred in (
-        ("fable", lambda a: "fable" in a),
-        ("grok", lambda a: "grok" in a),
-        ("gpt", lambda a: a.startswith("gpt-")),
-        ("gemini", lambda a: "gemini" in a),
-        ("opus", lambda a: "opus" in a and "5-thinking" in a),
-    ):
-        if needle in key:
-            for a in allow:
-                if pred(a):
-                    return a
+    for needle in ("fable", "grok", "gpt", "gemini", "opus"):
+        if needle not in key:
+            continue
+        for a in allow:
+            al = a.lower()
+            if needle == "opus" and "opus" in al and "fable" not in al:
+                return a
+            if needle != "opus" and needle in al:
+                return a
     return None
 
 
-def resolve(name: str, allow: list[str]) -> tuple[str | None, str]:
+def prefer_fable(host: str, allow: list[str], family: str) -> str:
+    if host == "cursor" and allow:
+        for a in allow:
+            if a == f"{family}-thinking-high" or (family in a and "thinking-high" in a and "xhigh" not in a):
+                return a
+        for a in allow:
+            if "fable" in a:
+                return a
+    return family
+
+
+def resolve(name: str, host: str, allow: list[str]) -> tuple[str | None, str]:
     rid = registry_get(name)
-    raw = rid or name
-    slug = map_to_allowlist(raw, allow)
-    if name.lower() in {"fable", "default"} and not slug:
-        slug = CURSOR_FABLE
-    if not slug:
-        slug = map_to_allowlist("fable", allow) or CURSOR_FABLE
-    if "fable" in name.lower() and not rid:
-        slug = CURSOR_FABLE
-    return rid, slug
+    want_fable = "fable" in name.lower()
+    raw = rid or (FAMILY if want_fable else name)
+    mapped = map_to_allowlist(raw, allow)
+    if mapped:
+        return rid, mapped
+    if want_fable:
+        return rid, prefer_fable(host, allow, rid or FAMILY)
+    return rid, raw
 
 
 def main() -> int:
@@ -80,10 +121,21 @@ def main() -> int:
     ap.add_argument("--name", default="fable")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
-    allow = [x.strip() for x in os.environ.get("CONSULT_ALLOWLIST", "").split(",") if x.strip()] or DEFAULT_ALLOW
-    rid, slug = resolve(args.name, allow)
+    host = detect_host()
+    allow = allowlist(host)
+    rid, slug = resolve(args.name, host, allow)
     if args.json:
-        print(json.dumps({"registry": rid, "slug": slug, "name": args.name}))
+        print(
+            json.dumps(
+                {
+                    "host": host,
+                    "registry": rid,
+                    "slug": slug,
+                    "name": args.name,
+                    "allow_count": len(allow),
+                }
+            )
+        )
     else:
         print(slug)
     return 0

@@ -1,11 +1,11 @@
 {
-  "skill": "opus-fable-orchestrator-ko",
+  "skill": "orchestrator-consultant-gate-ko",
   "notes": "한국어 트리거. 정적 게이트는 python3 eval/run.py.",
   "cases": [
     {
       "id": "happy-01-score",
       "should_trigger": true,
-      "prompt": "사용자에게 90점 보고하기 전에 fable 자문 받아와",
+      "prompt": "사용자에게 90점 보고하기 전에 컨설턴트 게이트로 자문 받아와",
       "checks": { "preserve_tokens": ["자문"] }
     },
     {

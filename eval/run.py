@@ -55,7 +55,7 @@ def run() -> int:
     skill_text = (ROOT / "SKILL.md").read_text(encoding="utf-8")
     fm = frontmatter(skill_text)
     version = (ROOT / EVAL["version_file"]).read_text(encoding="utf-8").strip()
-    desc = fm.get("description", "")
+    desc = re.sub(r"\s+", " ", fm.get("description", ""))
     name = fm.get("name", "")
     live = os.environ.get("EVAL_LIVE") == "1"
     results: list[dict] = []
@@ -98,9 +98,11 @@ def run() -> int:
         elif sc["expect"] == "skill_mentions_timeout_fallback":
             miss = [n for n in EVAL["timeout_needles"] if n.lower() not in skill_text.lower()]
             results.append(fail(sid, f"missing={miss}") if miss else ok(sid))
-        elif sc["expect"] == "skill_requires_opus_parent":
-            if "5.0" not in skill_text:
-                results.append(fail(sid, "must refuse Opus 5.0 as parent"))
+        elif sc["expect"] == "skill_keeps_session_parent":
+            miss = [n for n in EVAL.get("parent_needles", []) if n not in skill_text]
+            extra = [n for n in EVAL.get("parent_forbidden", []) if n in skill_text]
+            if miss or extra:
+                results.append(fail(sid, f"missing={miss} forbidden_present={extra}"))
             else:
                 results.append(ok(sid))
         elif sc["expect"] == "resolve_consult_script":
@@ -121,11 +123,14 @@ def run() -> int:
                         results.append(fail(sid, f"not json: {p.stdout!r}"))
                     else:
                         slug = data.get("slug") or ""
-                        want = EVAL.get("fable_model_slug", "")
-                        if want and want not in slug:
+                        host = data.get("host") or ""
+                        want = EVAL.get("fable_model_slug", "claude-fable-5")
+                        if "host" not in data:
+                            results.append(fail(sid, "json missing host"))
+                        elif want and want not in slug:
                             results.append(fail(sid, f"slug {slug!r} missing {want!r}"))
                         else:
-                            results.append(ok(sid, slug))
+                            results.append(ok(sid, f"{host}:{slug}"))
         elif sc["expect"] == "folder_matches_skill_name":
             if ROOT.name != EVAL["skill"]:
                 results.append(fail(sid, f"folder {ROOT.name!r} != name {EVAL['skill']!r}"))
@@ -144,37 +149,83 @@ def run() -> int:
             import shutil
             import subprocess
 
-            brief = (ROOT / "templates" / "fable-briefing.md").read_text(encoding="utf-8")
             needle = sc.get("prompt_contains", "Rebut me")
+            brief = (ROOT / "templates" / "fable-briefing.md").read_text(encoding="utf-8")
             if needle not in brief:
                 results.append(fail(sid, f"briefing missing {needle!r}"))
                 continue
-            bin_ = shutil.which("agent-model-registry")
-            if not bin_:
-                results.append(fail(sid, "agent-model-registry not on PATH"))
+            script = ROOT / "scripts" / "resolve-consult.py"
+            r = subprocess.run([sys.executable, str(script), "--json"], capture_output=True, text=True)
+            try:
+                data = json.loads(r.stdout)
+            except json.JSONDecodeError:
+                results.append(fail(sid, f"resolve not json: {r.stdout!r}"))
                 continue
-            p = subprocess.run([bin_, "get", "fable"], capture_output=True, text=True, timeout=sc.get("timeout_seconds", 30))
-            out = (p.stdout or "").strip()
-            if p.returncode != 0 or not out:
-                results.append(fail(sid, f"get fable failed rc={p.returncode} {out!r}"))
+            host, slug = data.get("host"), data.get("slug")
+            prompt = (
+                "You are a read-only consultant. "
+                + needle
+                + ". Reply with the exact token REBUT_OK in the first line."
+            )
+            timeout = sc.get("timeout_seconds", 120)
+            if host == "cursor":
+                bin_ = shutil.which("cursor")
+                if not bin_:
+                    results.append(fail(sid, "cursor CLI not on PATH"))
+                    continue
+                cmd = [bin_, "-p", "--mode", "ask", "--model", slug, prompt]
+            elif host == "claude":
+                bin_ = shutil.which("claude")
+                if not bin_:
+                    results.append(fail(sid, "claude CLI not on PATH"))
+                    continue
+                cmd = [bin_, "-p", "--model", slug, prompt]
             else:
-                results.append(ok(sid, f"registry={out.splitlines()[-1]} briefing_ok"))
-        elif sc["expect"] == "readme_for_agents":
+                results.append({"id": sid, "ok": True, "detail": f"skipped live on host={host}", "skipped": True})
+                continue
+            p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+            out = (p.stdout or "") + (p.stderr or "")
+            if p.returncode != 0:
+                results.append(fail(sid, f"rc={p.returncode} {out[-800:]}"))
+            elif "REBUT_OK" not in out:
+                results.append(fail(sid, f"missing REBUT_OK {out[-800:]}"))
+            else:
+                results.append(ok(sid, f"{host}:{slug}"))
+        elif sc["expect"] == "readme_not_a_skill":
             readme = (ROOT / "README.md").read_text(encoding="utf-8")
-            if "For agents" not in readme and "에이전트 전용" not in readme:
-                results.append(fail(sid, "README missing agent block"))
+            if "For agents" in readme or "에이전트 전용" in readme:
+                results.append(fail(sid, "README must not duplicate SKILL.md"))
             else:
                 results.append(ok(sid))
-        elif sc["expect"] == "readme_both_diagrams":
+        elif sc["expect"] == "readme_locale_diagram":
             readme = (ROOT / "README.md").read_text(encoding="utf-8")
-            en = "how-opus-fable-works-en.png" in readme
-            ko = "how-opus-fable-works-ko.png" in readme
-            if EVAL.get("locale") == "en" and not (en and ko):
-                results.append(fail(sid, f"en={en} ko={ko}"))
-            elif EVAL.get("locale") == "ko" and not ko:
-                results.append(fail(sid, "missing ko diagram"))
+            en = "how-the-gate-works-en.png" in readme
+            ko = "how-the-gate-works-ko.png" in readme
+            loc = EVAL.get("locale")
+            if loc == "en" and (not en or ko):
+                results.append(fail(sid, f"en branch wants en.png only (en={en} ko={ko})"))
+            elif loc == "ko" and (not ko or en):
+                results.append(fail(sid, f"ko branch wants ko.png only (en={en} ko={ko})"))
             else:
                 results.append(ok(sid))
+        elif sc["expect"] == "resolve_reports_host":
+            import subprocess
+
+            script = ROOT / "scripts" / "resolve-consult.py"
+            p = subprocess.run([sys.executable, str(script), "--json"], capture_output=True, text=True)
+            try:
+                data = json.loads(p.stdout)
+            except json.JSONDecodeError:
+                results.append(fail(sid, f"not json: {p.stdout!r}"))
+            else:
+                host = data.get("host")
+                slug = data.get("slug") or ""
+                if host not in ("cursor", "claude", "codex", "unknown"):
+                    results.append(fail(sid, f"bad host {host!r}"))
+                elif "fable" not in slug.lower():
+                    results.append(fail(sid, f"slug not fable: {slug!r}"))
+                else:
+                    results.append(ok(sid, f"{host}:{slug}"))
         else:
             results.append(fail(sid, f"unknown expect {sc.get('expect')}"))
 
