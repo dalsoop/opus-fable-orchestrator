@@ -14,7 +14,7 @@ description: >-
 
 # Opus-Fable Orchestrator (한국어)
 
-**부모 모델 (필수):** 작업 전에 `/model claude-opus-4-6[1m]`. 세션 실행자는 Opus 4.6 1M. Fable은 자문만. 싼 부모 모델로 돌리지 않는다.
+**부모 모델 (필수):** 작업 전에 `/model claude-opus-4-6[1m]`. 세션 실행자는 Opus 4.6 1M. Fable은 자문만. 싼 부모 모델로 돌리지 않는다. **Opus 5.0을 부모로 쓰지 않는다 — 오류율이 높다.**
 
 실행자가 쓰고 돌린다. Fable은 읽기 전용(파일·도구 없음). 부모 에이전트가 실행자다.
 

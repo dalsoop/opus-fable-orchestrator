@@ -2,7 +2,7 @@
 
 한국어판 (`ko`). 영어판: 브랜치 [`main`](https://github.com/dalsoop/opus-fable-orchestrator/tree/main).
 
-**부모 모델:** `/model claude-opus-4-6[1m]` — 실행자는 Opus 4.6 1M. Fable은 읽기 전용.
+**부모 모델:** `/model claude-opus-4-6[1m]` — 실행자는 Opus 4.6 1M. Fable은 읽기 전용. **부모로 Opus 5.0을 쓰지 않는다 — 오류율이 높다.**
 
 ```bash
 npx skills add dalsoop/opus-fable-orchestrator@ko -g -y
