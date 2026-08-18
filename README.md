@@ -20,8 +20,14 @@ npx skills add dalsoop/opus-fable-orchestrator -g -y
 python3 eval/run.py
 ```
 
+<p align="center"><strong>English</strong></p>
 <p align="center">
   <img src="assets/how-opus-fable-works-en.png" alt="How Opus–Fable works" width="920">
+</p>
+
+<p align="center"><strong>한국어</strong></p>
+<p align="center">
+  <img src="assets/how-opus-fable-works-ko.png" alt="OPUS–FABLE 작동 원리" width="920">
 </p>
 
 [`SKILL.md`](SKILL.md) · [`templates/`](templates/) · [`eval/`](eval/) · MIT
