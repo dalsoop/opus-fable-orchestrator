@@ -141,7 +141,40 @@ def run() -> int:
             miss = [n for n in EVAL.get("override_needles", []) if n not in skill_text]
             results.append(fail(sid, f"missing={miss}") if miss else ok(sid))
         elif sc.get("harness") == "live":
-            results.append(fail(sid, "live harness not implemented in run.py"))
+            import shutil
+            import subprocess
+
+            brief = (ROOT / "templates" / "fable-briefing.md").read_text(encoding="utf-8")
+            needle = sc.get("prompt_contains", "Rebut me")
+            if needle not in brief:
+                results.append(fail(sid, f"briefing missing {needle!r}"))
+                continue
+            bin_ = shutil.which("agent-model-registry")
+            if not bin_:
+                results.append(fail(sid, "agent-model-registry not on PATH"))
+                continue
+            p = subprocess.run([bin_, "get", "fable"], capture_output=True, text=True, timeout=sc.get("timeout_seconds", 30))
+            out = (p.stdout or "").strip()
+            if p.returncode != 0 or not out:
+                results.append(fail(sid, f"get fable failed rc={p.returncode} {out!r}"))
+            else:
+                results.append(ok(sid, f"registry={out.splitlines()[-1]} briefing_ok"))
+        elif sc["expect"] == "readme_for_agents":
+            readme = (ROOT / "README.md").read_text(encoding="utf-8")
+            if "For agents" not in readme and "에이전트 전용" not in readme:
+                results.append(fail(sid, "README missing agent block"))
+            else:
+                results.append(ok(sid))
+        elif sc["expect"] == "readme_both_diagrams":
+            readme = (ROOT / "README.md").read_text(encoding="utf-8")
+            en = "how-opus-fable-works-en.png" in readme
+            ko = "how-opus-fable-works-ko.png" in readme
+            if EVAL.get("locale") == "en" and not (en and ko):
+                results.append(fail(sid, f"en={en} ko={ko}"))
+            elif EVAL.get("locale") == "ko" and not ko:
+                results.append(fail(sid, "missing ko diagram"))
+            else:
+                results.append(ok(sid))
         else:
             results.append(fail(sid, f"unknown expect {sc.get('expect')}"))
 

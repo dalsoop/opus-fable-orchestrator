@@ -9,9 +9,9 @@ Each locale is a **git branch**. Install the branch you want.
 | Edition | Branch | Install |
 |---|---|---|
 | English | [`main`](https://github.com/dalsoop/opus-fable-orchestrator/tree/main) | `npx skills add dalsoop/opus-fable-orchestrator -g -y` |
-| Korean | [`ko`](https://github.com/dalsoop/opus-fable-orchestrator/tree/ko) | `npx skills add dalsoop/opus-fable-orchestrator@ko -g -y` |
+| Korean | [`ko`](https://github.com/dalsoop/opus-fable-orchestrator/tree/ko) | `npx skills add dalsoop/opus-fable-orchestrator#ko -g -y` |
 
-You are on **English (`main`)**.
+You are on **English (`main`)**. `owner/repo@name` is a **skill name**, not a git branch. Korean checkout is `owner/repo#ko`.
 
 **Parent:** `/model` from `agent-model-registry get claude` (keep `[1m]` if the host uses it). Consult is not the parent. **Do not use Opus 5.0 as parent.**
 
