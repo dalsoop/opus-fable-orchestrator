@@ -103,6 +103,17 @@ def run() -> int:
                 results.append(fail(sid, "SKILL.md must pin claude-opus-4-6 parent"))
             else:
                 results.append(ok(sid))
+        elif sc["expect"] == "folder_matches_skill_name":
+            if ROOT.name != EVAL["skill"]:
+                results.append(fail(sid, f"folder {ROOT.name!r} != name {EVAL['skill']!r}"))
+            else:
+                results.append(ok(sid))
+        elif sc["expect"] == "skill_contains_fable_slug":
+            slug = EVAL.get("fable_model_slug", "")
+            if slug not in skill_text:
+                results.append(fail(sid, f"SKILL.md missing Task slug {slug!r}"))
+            else:
+                results.append(ok(sid))
         elif sc.get("harness") == "live":
             results.append(fail(sid, "live harness not implemented in run.py"))
         else:
