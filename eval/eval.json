@@ -18,7 +18,7 @@
   "open_question": "What category did I miss?",
   "timeout_needles": ["Timeout", "retry"],
   "parent_needles": ["Do not switch parent", "Grok", "Codex"],
-  "parent_forbidden": ["Opus 4.6", "Opus 5.0"],
+  "parent_forbidden": [],
   "scenarios": [
     { "id": "version-sync", "type": "version", "expect": "VERSION_matches_frontmatter" },
     { "id": "locale-en", "type": "trigger", "expect": "description_has_required_not_forbidden" },

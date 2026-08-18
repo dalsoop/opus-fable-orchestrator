@@ -4,7 +4,7 @@ license: MIT
 compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, …).
 metadata:
   author: dalsoop
-  version: "1.9.3"
+  version: "1.9.4"
   locale: en
 description: >-
   Ask a read-only second opinion before you score, merge, or ship, without
@@ -27,6 +27,15 @@ You are the agent currently running this session (Grok, Codex, Claude, GPT, …)
 **Must not:** routine lookup (`grep`, file reads), mechanical edits, clear bugfix.
 
 Ask ≤500 words. Not every turn.
+
+## Optional models
+
+Only if the user is choosing models this turn. Otherwise keep the session agent.
+
+| Role | Model | Value |
+|---|---|---|
+| Executor | Opus 4.6 (**not** Opus 5.0) | Writes and runs. Cheaper than 5.0 for the same job. Do not switch the parent to 5.0 to use this skill. |
+| Consult | Fable 5 | Short read-only judgment. Expensive per token — cap length, never use as the executor. |
 
 ## Spawn
 
