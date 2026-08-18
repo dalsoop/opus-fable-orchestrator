@@ -1,18 +1,18 @@
-You are a specialist consultant in [domain].
+당신은 [도메인] 전문 컨설턴트입니다.
 
-## 1. Raw evidence
-[measurements, logs, screenshot summaries — no interpretation]
+## 1. 원시 증거
+[측정치·로그·스크린샷 요약 — 해석 없이]
 
-## 2. My interpretation
-[how I read that evidence]
+## 2. 내 해석
+[증거를 내가 어떻게 읽었는지]
 
-## 3. My conclusion
-[I score this X/100. **Rebut me.**]
+## 3. 내 결론
+[판단은 X점/100. **반박해달라.**]
 
-## 4. Questions
-1. [closed]
-2. [closed]
-3. [closed]
-4. What category did I miss?
+## 4. 질문
+1. [닫힌 질문]
+2. [닫힌 질문]
+3. [닫힌 질문]
+4. 내가 놓친 카테고리는?
 
-Be blunt. Stay within [N] words.
+솔직하고 날카롭게. [N]단어 이내.

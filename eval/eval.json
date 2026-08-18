@@ -1,16 +1,16 @@
 {
-  "skill": "opus-fable-orchestrator",
-  "locale": "en",
+  "skill": "opus-fable-orchestrator-ko",
+  "locale": "ko",
   "version_file": "VERSION",
   "min_scenarios": { "trigger": 1, "roundtrip": 1, "error": 1, "version": 1 },
-  "triggers_required": ["expert consult", "opus-fable", "second opinion"],
-  "triggers_forbidden": ["fable 자문", "전문가 의견", "자문 받아와", "페이블 자문"],
-  "briefing_sections": ["Raw evidence", "My interpretation", "My conclusion", "Questions"],
-  "open_question": "What category did I miss?",
-  "timeout_needles": ["Timeout", "retry"],
+  "triggers_required": ["fable 자문", "전문가 의견", "자문 받아와", "페이블 자문"],
+  "triggers_forbidden": ["expert consult", "second opinion"],
+  "briefing_sections": ["원시 증거", "내 해석", "내 결론", "질문"],
+  "open_question": "내가 놓친 카테고리는?",
+  "timeout_needles": ["Timeout", "재시도"],
   "scenarios": [
     { "id": "version-sync", "type": "version", "expect": "VERSION_matches_frontmatter" },
-    { "id": "locale-en", "type": "trigger", "expect": "description_has_required_not_forbidden" },
+    { "id": "locale-ko", "type": "trigger", "expect": "description_has_required_not_forbidden" },
     { "id": "briefing-template", "type": "roundtrip", "expect": "briefing_has_sections" },
     { "id": "digest-template", "type": "roundtrip", "expect": "digest_has_accept_reject_defer" },
     { "id": "error-timeout", "type": "error", "expect": "skill_mentions_timeout_fallback" },
@@ -20,7 +20,7 @@
       "type": "roundtrip",
       "harness": "live",
       "model": "fable",
-      "prompt_contains": "Rebut me",
+      "prompt_contains": "반박해달라",
       "expect": "response_received",
       "timeout_seconds": 120
     }
