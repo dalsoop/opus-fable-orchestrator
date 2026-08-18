@@ -5,19 +5,19 @@
     {
       "id": "happy-01-score",
       "should_trigger": true,
-      "prompt": "사용자에게 90점 보고하기 전에 컨설턴트 게이트로 자문 받아와",
+      "prompt": "전수조사해서 바꾸기 전에 컨설턴트 게이트로 자문 받아와",
       "checks": { "preserve_tokens": ["자문"] }
     },
     {
       "id": "happy-02-merge",
       "should_trigger": true,
-      "prompt": "머지 전에 전문가 의견. 페이블 대신 grok으로 자문",
+      "prompt": "업무 지시 받았다. 전수조사해서 바꾸자. 페이블 대신 grok으로 자문",
       "checks": { "preserve_tokens": ["agent-model-registry"] }
     },
     {
       "id": "happy-03-gpt",
       "should_trigger": true,
-      "prompt": "점수 보고 전에 컨설턴트 게이트. 자문 모델은 gpt",
+      "prompt": "전수조사 전에 컨설턴트 게이트. 자문 모델은 gpt",
       "checks": { "preserve_tokens": ["자문"] }
     },
     {

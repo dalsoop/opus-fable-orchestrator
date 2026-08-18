@@ -1,6 +1,6 @@
 # orchestrator-consultant-gate-ko
 
-머지·배포·큰 변경 전에, 지금 돌리는 에이전트는 그대로 두고 읽기 전용 전문가 의견을 받는 스킬입니다.
+업무 지시 뒤, 전수조사해서 바꾸기 전에, 지금 돌리는 에이전트는 그대로 두고 계획에 대한 읽기 전용 전문가 의견을 받는 스킬입니다.
 
 한국어판 (`ko`). 영어: 브랜치 [`main`](https://github.com/dalsoop/orchestrator-consultant-gate/tree/main).
 
@@ -19,7 +19,7 @@ EVAL_LIVE=1 python3 eval/run.py
   <img src="assets/how-the-gate-works-ko.png" alt="한 AI가 계획을 세운다. 다른 AI가 검수한다." width="920">
 </p>
 
-한 AI가 **계획**을 세운다. **GATE**는 실행 전. 다른 AI가 읽기 전용으로 **검수**하고 의견을 돌려준다. 세션은 그대로.
+한 AI가 업무 지시로 **계획**을 세운다. **GATE**는 전수조사해서 바꾸기 전. 다른 AI가 읽기 전용으로 **검수**하고 의견을 돌려준다. 세션은 그대로.
 
 자문 자식은 실행 모델과 다른 모델이다. 기본 계열은 `fable` → `claude-fable-5`. 이번 턴에 바꾸려면 `--name grok`, `--name gpt`, `--name gemini`. 막히면 같은 `--json`의 `fallback_slug`.
 
