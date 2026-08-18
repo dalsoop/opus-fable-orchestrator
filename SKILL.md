@@ -4,17 +4,19 @@ license: MIT
 compatibility: Host must spawn a read-only Fable (or stronger) subagent — Cursor Task, Claude Code Agent, or equivalent.
 metadata:
   author: dalsoop
-  version: "1.1.0"
+  version: "1.2.0"
 description: >-
   Executor runs; Fable consults read-only at fixed gates and when
   overconfidence signals fire. Use when scoring a product, taking a design
-  fork, merging/shipping, or when the user says fable 자문, 전문가 의견,
-  expert consult, opus-fable, 자문 받아와, second opinion.
+  fork, merging/shipping, or when the user says expert consult, opus-fable,
+  or second opinion. Korean: opus-fable-orchestrator-ko.
 ---
 
 # Opus-Fable Orchestrator
 
 Executor writes and runs. Fable is read-only (no files, no tools). Parent stays executor. Host model need not be named Opus.
+
+Korean user or Korean triggers → `opus-fable-orchestrator-ko`. Do not mix languages in one brief.
 
 ## Consult
 
@@ -24,13 +26,13 @@ Executor writes and runs. Fable is read-only (no files, no tools). Parent stays 
 
 **Must not:** grep, file reads, mechanical edits, clear bugfix.
 
-**Optional:** design fork, market/pricing, post-hoc “what did I miss?”. Skip if Fable unavailable — use a stronger model with the same brief (gates stay).
+**Optional:** design fork, market/pricing, post-hoc “what did I miss?”. If Fable is unavailable, same brief on a stronger model (gates stay).
 
 Ask for ≤500 words. Do not call every turn. Do not replace the executor’s job with Fable.
 
 ## Brief
 
-Fill `templates/fable-briefing.md` or `templates/fable-briefing.en.md` to match the user language (evidence ≠ interpretation). Invite rebuttal. 3–5 closed questions + one open: "What category did I miss?"
+Fill `templates/fable-briefing.md` (evidence ≠ interpretation). Invite rebuttal. 3–5 closed questions + one open: "What category did I miss?"
 
 Cursor: `Task` `generalPurpose`, model slug containing `fable`, prompt = brief.
 
@@ -42,6 +44,6 @@ Timeout: proceed; retry at the next gate.
 
 ## Digest
 
-Use `templates/digest.md` or `templates/digest.en.md`. Each item: accept / reject / defer + reason. Split accept into code-fixable vs not. Report `min(code score, reachable ceiling)`. Quote Fable when telling the user.
+Use `templates/digest.md`. Each item: accept / reject / defer + reason. Split accept into code-fixable vs not. Report `min(code score, reachable ceiling)`. Quote Fable when telling the user.
 
 Ceiling is external (reviews, time, third parties). Do not raise it with more code.

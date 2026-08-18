@@ -1,9 +1,9 @@
-| 항목 | accept / reject / defer | 이유 |
-|------|-------------------------|------|
+| item | accept / reject / defer | why |
+|------|-------------------------|-----|
 | | | |
 
-코드로 됨:
+Code-fixable:
 
-코드로 안 됨 (상한):
+Not code-fixable (ceiling):
 
-보고: min(코드점수, 도달상한) = __ · 인용:
+Report: min(code score, reachable ceiling) = __ · quote:
