@@ -4,12 +4,13 @@ license: MIT
 compatibility: Host must spawn a read-only Fable (or stronger) subagent — Cursor Task, Claude Code Agent, or equivalent.
 metadata:
   author: dalsoop
-  version: "1.2.0"
+  version: "1.3.0"
+  locale: en
 description: >-
   Executor runs; Fable consults read-only at fixed gates and when
   overconfidence signals fire. Use when scoring a product, taking a design
   fork, merging/shipping, or when the user says expert consult, opus-fable,
-  or second opinion. Korean: opus-fable-orchestrator-ko.
+  or second opinion. Korean edition is git branch ko.
 ---
 
 # Opus-Fable Orchestrator
@@ -17,8 +18,6 @@ description: >-
 **Parent model (required):** `/model claude-opus-4-6[1m]` before any work. The session executor is Opus 4.6 with 1M context. Fable is consult-only. Do not run this skill on a cheaper parent.
 
 Executor writes and runs. Fable is read-only (no files, no tools). Parent stays executor.
-
-Korean user or Korean triggers → `opus-fable-orchestrator-ko`. Do not mix languages in one brief.
 
 ## Consult
 
@@ -49,3 +48,7 @@ Timeout: proceed; retry at the next gate.
 Use `templates/digest.md`. Each item: accept / reject / defer + reason. Split accept into code-fixable vs not. Report `min(code score, reachable ceiling)`. Quote Fable when telling the user.
 
 Ceiling is external (reviews, time, third parties). Do not raise it with more code.
+
+## Version
+
+`VERSION` must equal `metadata.version`. Bump patch for template/eval only, minor for procedure, major for incompatible gates. Run `python3 eval/run.py` before tagging.

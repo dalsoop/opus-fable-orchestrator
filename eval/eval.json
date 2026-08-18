@@ -1,0 +1,28 @@
+{
+  "skill": "opus-fable-orchestrator",
+  "locale": "en",
+  "version_file": "VERSION",
+  "min_scenarios": { "trigger": 1, "roundtrip": 1, "error": 1, "version": 1 },
+  "triggers_required": ["expert consult", "opus-fable", "second opinion"],
+  "triggers_forbidden": ["fable 자문", "전문가 의견", "자문 받아와", "페이블 자문"],
+  "briefing_sections": ["Raw evidence", "My interpretation", "My conclusion", "Questions"],
+  "open_question": "What category did I miss?",
+  "timeout_needles": ["Timeout", "retry"],
+  "scenarios": [
+    { "id": "version-sync", "type": "version", "expect": "VERSION_matches_frontmatter" },
+    { "id": "locale-en", "type": "trigger", "expect": "description_has_required_not_forbidden" },
+    { "id": "briefing-template", "type": "roundtrip", "expect": "briefing_has_sections" },
+    { "id": "digest-template", "type": "roundtrip", "expect": "digest_has_accept_reject_defer" },
+    { "id": "error-timeout", "type": "error", "expect": "skill_mentions_timeout_fallback" },
+    { "id": "parent-model", "type": "roundtrip", "expect": "skill_requires_opus_parent" },
+    {
+      "id": "live-fable-roundtrip",
+      "type": "roundtrip",
+      "harness": "live",
+      "model": "fable",
+      "prompt_contains": "Rebut me",
+      "expect": "response_received",
+      "timeout_seconds": 120
+    }
+  ]
+}
