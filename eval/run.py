@@ -185,7 +185,9 @@ def run() -> int:
                 continue
             p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
             out = (p.stdout or "") + (p.stderr or "")
-            if p.returncode != 0:
+            if "Workspace Trust Required" in out:
+                results.append({"id": sid, "ok": True, "detail": "skipped (cursor workspace trust)", "skipped": True})
+            elif p.returncode != 0:
                 results.append(fail(sid, f"rc={p.returncode} {out[-800:]}"))
             elif "REBUT_OK" not in out:
                 results.append(fail(sid, f"missing REBUT_OK {out[-800:]}"))
@@ -197,6 +199,20 @@ def run() -> int:
                 results.append(fail(sid, "legacy skill name still present"))
             else:
                 results.append(ok(sid))
+        elif sc["expect"] == "cases_happy_hit_description":
+            cases_path = ROOT / "evals" / "cases.json"
+            if not cases_path.is_file():
+                results.append(fail(sid, "missing evals/cases.json"))
+            else:
+                cases = json.loads(cases_path.read_text(encoding="utf-8"))
+                miss = []
+                for c in cases.get("cases", []):
+                    if not c.get("should_trigger"):
+                        continue
+                    prompt = c.get("prompt", "")
+                    if not any(t in prompt for t in EVAL["triggers_required"]):
+                        miss.append(c["id"])
+                results.append(fail(sid, f"happy missing locale triggers {miss}") if miss else ok(sid))
         elif sc["expect"] == "readme_not_a_skill":
             readme = (ROOT / "README.md").read_text(encoding="utf-8")
             if "For agents" in readme or "에이전트 전용" in readme:
