@@ -4,7 +4,7 @@ license: MIT
 compatibility: 읽기 전용 하위 에이전트를 띄울 수 있는 호스트(Cursor Task, Claude Code Agent, Codex, …).
 metadata:
   author: dalsoop
-  version: "1.9.4"
+  version: "1.9.5"
   locale: ko
 description: >-
   점수 보고·머지·배포 전에 읽기 전용 전문가 의견을 받는다. 지금 세션 에이전트는 바꾸지
@@ -15,7 +15,15 @@ description: >-
 
 # Orchestrator Consultant Gate — 한국어
 
-지금 이 세션을 실행 중인 에이전트다(Grok, Codex, Claude, GPT, …). 부모를 바꾸지 않는다. 게이트에서 읽기 전용 하위 에이전트에게 자문을 요청한다(파일·도구 없음). 자문은 실행자를 대체하지 않는다.
+지금 이 세션의 **실행 모델**이다(Grok, Codex, Claude, GPT, …). 부모를 바꾸지 않는다.
+
+흐름: **실행 모델 → 게이트 → 자문 모델**. 자문 모델은 읽기 전용(파일·도구 없음). 실행자를 대체하지 않는다.
+
+## 흐름
+
+1. **실행 모델** — 이미 도는 세션. 작성·실행.
+2. **게이트** — 점수 전, 10개 이상 파일 수정 전, 머지/배포 전.
+3. **자문 모델** — 읽기 전용 의견.
 
 ## 게이트
 
@@ -27,27 +35,26 @@ description: >-
 
 응답 ≤500단어. 매 턴 금지.
 
-## 옵션 모델
+## 자문 모델
 
-사용자가 이번 턴에 모델을 고를 때만. 아니면 세션 에이전트 유지.
+실행 모델은 유지. 자식만 **다른 모델**로 고른다.
 
-| 역할 | 모델 | 가성비 |
-|---|---|---|
-| 실행 | Opus 4.6 (**Opus 5.0 아님**) | 작성·실행. 같은 실행 일에 5.0보다 싸다. 이 스킬 쓰려고 부모를 5.0으로 바꾸지 말 것. |
-| 자문 | Fable 5 | 짧은 읽기 전용 판단. 토큰당 비싸다 — 길이 제한, 실행자로 쓰지 말 것. |
-
-## 호출
+기본 자문 계열: `agent-model-registry get fable` → `claude-fable-5`.
 
 ```bash
 python3 scripts/resolve-consult.py --json
 python3 scripts/resolve-consult.py --name grok --json
+python3 scripts/resolve-consult.py --name gpt --json
+python3 scripts/resolve-consult.py --name gemini --json
 ```
 
-`--json` → `{host, registry, slug, name}`. `host`는 이번 세션(`CONSULT_HOST`: cursor|claude|codex). 자식 모델 id는 `slug`. 기본 자문 계열: `agent-model-registry get fable` → `claude-fable-5`. Cursor만 Task slug로 매핑. Claude Code·Codex는 계열 id를 그대로. Claude/Codex에서 `cursor --list-models`를 부르지 말 것.
+`--json` → `{host, registry, slug, name}`. `host`는 이번 세션(`CONSULT_HOST`: cursor|claude|codex). 자식 모델 id는 `slug`. Cursor만 Task slug로 매핑. Claude Code·Codex는 계열 id를 그대로. Claude/Codex에서 `cursor --list-models`를 부르지 말 것.
 
-이번 턴에 자문 모델을 말했으면 `--name`.
+이번 턴에 자문 모델을 말했으면 `--name` (레지스트리 키 또는 호스트 slug).
 
-`templates/fable-briefing.md` (증거 ≠ 해석). 반박 + 닫힌 3–5 + 열린 1: "내가 놓친 카테고리는?" 비밀 금지. 본문 표기는 Fable. `페이블 자문` / `fable 자문`은 호출 트리거다.
+`templates/fable-briefing.md` (증거 ≠ 해석). 반박 + 닫힌 3–5 + 열린 1: "내가 놓친 카테고리는?" 비밀 금지. 본문 표기는 자문 모델. `페이블 자문` / `fable 자문`은 호출 트리거다.
+
+## 호출
 
 Cursor:
 

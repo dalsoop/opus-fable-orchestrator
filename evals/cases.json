@@ -15,6 +15,12 @@
       "checks": { "preserve_tokens": ["agent-model-registry"] }
     },
     {
+      "id": "happy-03-gpt",
+      "should_trigger": true,
+      "prompt": "점수 보고 전에 컨설턴트 게이트. 자문 모델은 gpt",
+      "checks": { "preserve_tokens": ["자문"] }
+    },
+    {
       "id": "neg-01-grep",
       "should_trigger": false,
       "prompt": "TODO grep 해줘",
