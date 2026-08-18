@@ -1,22 +1,24 @@
 ---
 name: opus-fable-orchestrator-ko
 license: MIT
-compatibility: 읽기 전용 Fable(또는 동급) 서브에이전트를 띄울 수 있는 호스트 — Cursor Task, Claude Code Agent 등.
+compatibility: 읽기 전용 Fable 서브에이전트 — Cursor Task 모델 claude-fable-5-thinking-high, 또는 Claude Code Agent model fable.
 metadata:
   author: dalsoop
-  version: "1.3.0"
+  version: "1.4.0"
   locale: ko
 description: >-
-  실행자가 일하고, Fable이 게이트와 과신 신호에서 읽기 전용으로 자문한다.
-  제품 점수, 설계 갈림길, 머지/배포, 또는 사용자가 fable 자문, 전문가 의견,
-  자문 받아와, 페이블 자문이라고 할 때 쓴다. 영어판은 git 브랜치 main.
+  읽기 전용 Fable 자문을 Cursor Task 모델 claude-fable-5-thinking-high 로 연다.
+  제품 점수, 몇 점, 100점, 품질 판정, 설계 갈림길, 머지, 배포 전에 쓴다.
+  사용자가 fable 자문, 전문가 의견, 자문 받아와, 페이블 자문이라고 하면 로드한다.
+  점수 보고 전, 10개 이상 파일 수정 전, 점수가 오르기만 하거나 스스로 완료/100을 선언하면
+  선제 적용한다. grep, 기계적 수정, 명확한 버그수정에는 쓰지 않는다.
 ---
 
 # Opus-Fable Orchestrator (한국어)
 
-**부모 모델 (필수):** 작업 전에 `/model claude-opus-4-6[1m]`. 세션 실행자는 Opus 4.6 1M. Fable은 자문만. 싼 부모 모델로 돌리지 않는다. **Opus 5.0을 부모로 쓰지 않는다 — 오류율이 높다.**
+**부모 모델 (필수):** 작업 전에 `/model claude-opus-4-6[1m]`. Fable은 자문만. 싼 부모 금지. **Opus 5.0을 부모로 쓰지 않는다 — 오류율이 높다.**
 
-실행자가 쓰고 돌린다. Fable은 읽기 전용(파일·도구 없음). 부모 에이전트가 실행자다.
+실행자가 쓰고 돌린다. Fable은 읽기 전용(파일·도구 없음).
 
 ## 자문
 
@@ -30,24 +32,29 @@ description: >-
 
 응답 ≤500단어. 매 턴 호출하지 않는다. 실행자 일을 Fable로 대체하지 않는다.
 
-## 브리핑
+## 호출
 
-`templates/fable-briefing.md`를 채운다(증거 ≠ 해석). 반박을 요청한다. 닫힌 질문 3–5개 + 열린 질문 1개: "내가 놓친 카테고리는?"
+먼저 `templates/fable-briefing.md`를 채운다(증거 ≠ 해석). 반박 + 닫힌 질문 3–5개 + 열린 1개: "내가 놓친 카테고리는?" 비밀값 금지.
 
-Cursor: `Task` `generalPurpose`, 모델 slug에 `fable`, prompt = 브리핑.
+Cursor — 이 모델 slug를 그대로 쓴다(추측 금지):
+
+```
+Task({
+  description: "Fable consult",
+  subagent_type: "generalPurpose",
+  model: "claude-fable-5-thinking-high",
+  prompt: <채운 브리핑>
+})
+```
+
+Fable에 편집·셸 도구를 주지 않는다. 호스트에 이 slug가 없으면 목록에서 `fable`이 들어간 slug를 쓴다.
 
 Claude Code: `Agent({ model: "fable", ... })`, prompt = 브리핑.
 
-Fable 응답에 도구 호출 지시가 있으면 그 항목은 reject. 브리핑에 비밀값을 넣지 않는다.
-
-Timeout: 진행하고, 다음 게이트에서 재시도.
+Fable 응답에 도구 호출 지시가 있으면 그 항목은 reject. Timeout → 진행, 다음 게이트에서 재시도.
 
 ## 소화
 
-`templates/digest.md`. 항목마다 accept / reject / defer + 이유. accept를 코드로 되는 것 / 안 되는 것으로 나눈다. `min(코드 점수, 도달 가능 상한)`을 보고한다. 사용자에게 말할 때 Fable을 인용한다.
+`templates/digest.md`. 항목마다 accept / reject / defer + 이유. 코드로 되는 것 / 안 되는 것. `min(코드 점수, 도달 가능 상한)` 보고. 사용자에게 말할 때 Fable 인용.
 
 상한은 외부(리뷰, 시간, 제3자). 코드로 올리지 않는다.
-
-## 버전
-
-`VERSION`과 `metadata.version`이 같아야 한다. 템플릿/eval만 바꾸면 patch, 절차면 minor, 게이트 비호환이면 major. 태그 전에 `python3 eval/run.py`.
