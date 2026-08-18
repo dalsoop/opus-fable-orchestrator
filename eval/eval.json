@@ -18,6 +18,7 @@
   "briefing_sections": ["원시 증거", "내 해석", "내 결론", "질문"],
   "open_question": "내가 놓친 카테고리는?",
   "timeout_needles": ["Timeout", "재시도"],
+  "observability_needles": ["--record", "fallback_slug"],
   "parent_needles": ["부모를 바꾸지 않는다", "Grok", "Codex"],
   "parent_forbidden": [],
   "scenarios": [
@@ -38,6 +39,7 @@
     { "id": "resolve-host", "type": "roundtrip", "expect": "resolve_reports_host" },
     { "id": "consult-other-models", "type": "roundtrip", "expect": "skill_names_other_consults" },
     { "id": "resolve-grok", "type": "roundtrip", "expect": "resolve_named_consult" },
+    { "id": "observability", "type": "roundtrip", "expect": "skill_mentions_observability" },
     {
       "id": "live-fable-roundtrip",
       "type": "roundtrip",

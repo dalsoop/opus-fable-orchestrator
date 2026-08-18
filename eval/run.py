@@ -125,10 +125,15 @@ def run() -> int:
                         slug = data.get("slug") or ""
                         host = data.get("host") or ""
                         want = EVAL.get("fable_model_slug", "claude-fable-5")
+                        fb = (data.get("fallback_slug") or "").lower()
                         if "host" not in data:
                             results.append(fail(sid, "json missing host"))
                         elif want and want not in slug:
                             results.append(fail(sid, f"slug {slug!r} missing {want!r}"))
+                        elif "grok" not in fb:
+                            results.append(fail(sid, f"fallback_slug {data.get('fallback_slug')!r}"))
+                        elif not data.get("spawn") or not data.get("read_only"):
+                            results.append(fail(sid, "json missing spawn/read_only"))
                         else:
                             results.append(ok(sid, f"{host}:{slug}"))
         elif sc["expect"] == "folder_matches_skill_name":
@@ -161,7 +166,11 @@ def run() -> int:
             except json.JSONDecodeError:
                 results.append(fail(sid, f"resolve not json: {r.stdout!r}"))
                 continue
-            host, slug = data.get("host"), data.get("slug")
+            host = data.get("host")
+            slugs = [data.get("slug")]
+            fb = data.get("fallback_slug")
+            if fb and fb not in slugs:
+                slugs.append(fb)
             prompt = (
                 "You are a read-only consultant. "
                 + needle
@@ -173,26 +182,54 @@ def run() -> int:
                 if not bin_:
                     results.append(fail(sid, "cursor CLI not on PATH"))
                     continue
-                cmd = [bin_, "-p", "--mode", "ask", "--model", slug, prompt]
+
+                def _cmd(model: str) -> list[str]:
+                    return [bin_, "-p", "--mode", "ask", "--model", model, prompt]
             elif host == "claude":
                 bin_ = shutil.which("claude")
                 if not bin_:
                     results.append(fail(sid, "claude CLI not on PATH"))
                     continue
-                cmd = [bin_, "-p", "--model", slug, prompt]
+
+                def _cmd(model: str) -> list[str]:
+                    return [bin_, "-p", "--model", model, prompt]
             else:
                 results.append({"id": sid, "ok": True, "detail": f"skipped live on host={host}", "skipped": True})
                 continue
-            p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-            out = (p.stdout or "") + (p.stderr or "")
-            if "Workspace Trust Required" in out:
+            last = ""
+            used: str | bool | None = None
+            skipped_trust = False
+            for model in slugs:
+                if not model:
+                    continue
+                p = subprocess.run(_cmd(model), capture_output=True, text=True, timeout=timeout)
+                out = (p.stdout or "") + (p.stderr or "")
+                last = out
+                if "Workspace Trust Required" in out:
+                    skipped_trust = True
+                    break
+                blocked = (
+                    p.returncode != 0
+                    or "Review Data Policy" in out
+                    or "data policy" in out.lower()
+                    or "HTTP 402" in out
+                    or " 402" in out
+                )
+                if "REBUT_OK" in out:
+                    used = model
+                    break
+                if not blocked:
+                    results.append(fail(sid, f"missing REBUT_OK {out[-800:]}"))
+                    used = False
+                    break
+            if used is False:
+                pass
+            elif skipped_trust:
                 results.append({"id": sid, "ok": True, "detail": "skipped (cursor workspace trust)", "skipped": True})
-            elif p.returncode != 0:
-                results.append(fail(sid, f"rc={p.returncode} {out[-800:]}"))
-            elif "REBUT_OK" not in out:
-                results.append(fail(sid, f"missing REBUT_OK {out[-800:]}"))
+            elif used:
+                results.append(ok(sid, f"{host}:{used}"))
             else:
-                results.append(ok(sid, f"{host}:{slug}"))
+                results.append(fail(sid, f"all slugs blocked {last[-800:]}"))
         elif sc["expect"] == "no_legacy_skill_name":
             blob = skill_text + "\n" + (ROOT / "README.md").read_text(encoding="utf-8")
             if "opus-fable-orchestrator" in blob:
@@ -248,6 +285,9 @@ def run() -> int:
                     results.append(fail(sid, f"slug not fable: {slug!r}"))
                 else:
                     results.append(ok(sid, f"{host}:{slug}"))
+        elif sc["expect"] == "skill_mentions_observability":
+            miss = [n for n in EVAL.get("observability_needles", ["--record", "fallback_slug"]) if n not in skill_text]
+            results.append(fail(sid, f"missing={miss}") if miss else ok(sid))
         elif sc["expect"] == "skill_names_other_consults":
             miss = [n for n in ("--name grok", "--name gpt", "--name gemini") if n not in skill_text]
             results.append(fail(sid, f"missing={miss}") if miss else ok(sid))

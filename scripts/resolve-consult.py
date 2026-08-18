@@ -5,6 +5,9 @@ Family id: agent-model-registry `get fable` (fallback `claude-fable-5`).
 Host: CONSULT_HOST, else this session (CURSOR_AGENT / CLAUDECODE / Codex).
 Cursor Task slugs are used only when the host is Cursor. Never treat a
 random `agent` binary on PATH as Cursor.
+
+Default JSON includes `fallback_name` / `fallback_slug` (grok) and `spawn`.
+`--record` appends one line to ~/.orchestrator-consultant-gate/receipts.jsonl.
 """
 
 from __future__ import annotations
@@ -15,9 +18,13 @@ import os
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
+from pathlib import Path
 
 FAMILY = "claude-fable-5"
+FALLBACK_NAME = "grok"
 HOSTS = ("cursor", "claude", "codex")
+RECEIPT = Path.home() / ".orchestrator-consultant-gate" / "receipts.jsonl"
 
 
 def registry_get(name: str) -> str | None:
@@ -116,28 +123,77 @@ def resolve(name: str, host: str, allow: list[str]) -> tuple[str | None, str]:
     return rid, raw
 
 
+def spawn_hint(host: str, slug: str) -> dict[str, str]:
+    return {
+        "read_only": "no files, no tools",
+        "cursor": f'Task({{ description: "Consult", subagent_type: "generalPurpose", model: "{slug}", prompt: <briefing> }})',
+        "claude": f'Agent({{ model: "{slug}", prompt: <briefing> }})',
+        "codex": f"-m {slug}",
+        "host": host,
+    }
+
+
+def payload(name: str, host: str, allow: list[str]) -> dict:
+    rid, slug = resolve(name, host, allow)
+    out: dict = {
+        "host": host,
+        "registry": rid,
+        "slug": slug,
+        "name": name,
+        "allow_count": len(allow),
+        "read_only": True,
+        "spawn": spawn_hint(host, slug),
+    }
+    if name.lower() != FALLBACK_NAME:
+        frid, fslug = resolve(FALLBACK_NAME, host, allow)
+        out["fallback_name"] = FALLBACK_NAME
+        out["fallback_registry"] = frid
+        out["fallback_slug"] = fslug
+    return out
+
+
+def record(data: dict) -> Path:
+    RECEIPT.parent.mkdir(parents=True, exist_ok=True)
+    line = json.dumps(data, ensure_ascii=False)
+    with RECEIPT.open("a", encoding="utf-8") as f:
+        f.write(line + "\n")
+    return RECEIPT
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--name", default="fable")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--record", action="store_true", help="append a receipt line")
+    ap.add_argument("--ok", action="store_true")
+    ap.add_argument("--read-only", action="store_true")
+    ap.add_argument("--fallback-used", action="store_true")
     args = ap.parse_args()
     host = detect_host()
     allow = allowlist(host)
-    rid, slug = resolve(args.name, host, allow)
+    data = payload(args.name, host, allow)
+    if args.record:
+        rec = {
+            "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "host": data["host"],
+            "name": data["name"],
+            "slug": data["fallback_slug"] if args.fallback_used else data["slug"],
+            "registry": data.get("fallback_registry") if args.fallback_used else data.get("registry"),
+            "fallback_used": args.fallback_used,
+            "spawn_ok": args.ok,
+            "read_only": args.read_only,
+        }
+        path = record(rec)
+        if args.json:
+            rec["receipt"] = str(path)
+            print(json.dumps(rec))
+        else:
+            print(path)
+        return 0
     if args.json:
-        print(
-            json.dumps(
-                {
-                    "host": host,
-                    "registry": rid,
-                    "slug": slug,
-                    "name": args.name,
-                    "allow_count": len(allow),
-                }
-            )
-        )
+        print(json.dumps(data))
     else:
-        print(slug)
+        print(data["slug"])
     return 0
 
 

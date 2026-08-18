@@ -4,7 +4,7 @@ license: MIT
 compatibility: 읽기 전용 하위 에이전트를 띄울 수 있는 호스트(Cursor Task, Claude Code Agent, Codex, …).
 metadata:
   author: dalsoop
-  version: "1.10.0"
+  version: "1.11.0"
   locale: ko
 description: >-
   점수 보고·머지·배포 전에 읽기 전용 전문가 의견을 받는다. 지금 세션 에이전트는 바꾸지
@@ -40,9 +40,9 @@ python3 scripts/resolve-consult.py --name gpt --json
 python3 scripts/resolve-consult.py --name gemini --json
 ```
 
-기본 계열: `agent-model-registry get fable` → `claude-fable-5` (CLI 없으면 스크립트가 그 계열을 찍음). `--json` → `{host, registry, slug, name}`. `CONSULT_HOST`: cursor|claude|codex. Cursor만 Task slug. Claude/Codex에서 `cursor --list-models` 금지.
+기본 계열: `agent-model-registry get fable` → `claude-fable-5` (CLI 없으면 스크립트가 그 계열을 찍음). `--json` → `{host, registry, slug, name, fallback_slug, spawn, read_only}`. `CONSULT_HOST`: cursor|claude|codex. Cursor만 Task slug. Claude/Codex에서 `cursor --list-models` 금지.
 
-자식이 **막히면**(데이터 보관 정책, HTTP 402): `--name grok` 한 번, 또는 건너뛰고 다음 게이트. 멈추지 말 것.
+자식이 **막히면**(Cursor Review Data Policy, HTTP 402): `fallback_slug` 한 번, 또는 `--name grok`. 아니면 건너뛰고 다음 게이트. 멈추지 말 것.
 
 `templates/fable-briefing.md`에 계획을 넣는다(증거 ≠ 해석). 반박 + 닫힌 3–5 + 열린 1: "내가 놓친 카테고리는?" 비밀 금지. `페이블 자문` / `fable 자문`은 트리거.
 
@@ -50,4 +50,9 @@ Cursor: `Task({ description: "Consult", subagent_type: "generalPurpose", model: 
 
 ## 소화
 
-`templates/digest.md`. 완료: 모든 항목 accept / reject / defer + 이유, `min(코드 점수, 도달 가능 상한)`, 사용자에게 `host` + `registry` + `slug`. 상한은 외부 조건.
+`templates/digest.md`. 완료: 모든 항목 accept / reject / defer + 이유, `min(코드 점수, 도달 가능 상한)`, 사용자에게 `host` + `registry` + `slug` + `spawn_ok` + `read_only` + `fallback_used`. 상한은 외부 조건. 파일 점수와 라이브 spawn 점수를 더하지 말 것.
+
+```bash
+python3 scripts/resolve-consult.py --record --ok --read-only
+python3 scripts/resolve-consult.py --record --ok --read-only --fallback-used
+```

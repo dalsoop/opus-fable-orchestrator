@@ -11,6 +11,8 @@ python3 eval/run.py
 EVAL_LIVE=1 python3 eval/run.py
 ```
 
+`npx`는 **파일**만 복사한다. 두 번째 의견은 **호스트**가 자식을 spawn 해야 한다. 설치만으로 E2E가 아니다.
+
 영어: `npx skills add dalsoop/orchestrator-consultant-gate -g -y`
 
 <p align="center">
@@ -19,7 +21,7 @@ EVAL_LIVE=1 python3 eval/run.py
 
 한 AI가 **계획**을 세운다. **GATE**는 실행 전. 다른 AI가 읽기 전용으로 **검수**하고 의견을 돌려준다. 세션은 그대로.
 
-자문 자식은 실행 모델과 다른 모델이다. 기본 계열은 `fable` → `claude-fable-5`. 이번 턴에 바꾸려면 `--name grok`, `--name gpt`, `--name gemini`.
+자문 자식은 실행 모델과 다른 모델이다. 기본 계열은 `fable` → `claude-fable-5`. 이번 턴에 바꾸려면 `--name grok`, `--name gpt`, `--name gemini`. 막히면 같은 `--json`의 `fallback_slug`.
 
 [`SKILL.md`](SKILL.md) · [`templates/`](templates/) · [`scripts/`](scripts/) · [`eval/`](eval/) · MIT
 
