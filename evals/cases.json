@@ -1,17 +1,17 @@
 {
   "skill": "orchestrator-consultant-gate",
-  "notes": "Happy prompts must match description triggers. Negatives must not look like a score/merge/consult. Static gate is python3 eval/run.py.",
+  "notes": "Happy prompts must match description triggers. Negatives must not look like a work-order consult. Static gate is python3 eval/run.py.",
   "cases": [
     {
       "id": "happy-01-second-opinion",
       "should_trigger": true,
-      "prompt": "second opinion on this product score before I tell the user 90/100",
+      "prompt": "second opinion on this plan after the work order, audit then change",
       "checks": { "preserve_tokens": ["consult"] }
     },
     {
       "id": "happy-02-expert-consult",
       "should_trigger": true,
-      "prompt": "expert consult before merge — I think we are done",
+      "prompt": "expert consult before we start the sweep and change",
       "checks": { "preserve_tokens": ["consult"] }
     },
     {
@@ -23,7 +23,7 @@
     {
       "id": "happy-04-swap-gpt",
       "should_trigger": true,
-      "prompt": "expert consult before merge — spawn gpt as the consult model",
+      "prompt": "expert consult after the work order — spawn gpt as the consult model",
       "checks": { "preserve_tokens": ["consult"] }
     },
     {

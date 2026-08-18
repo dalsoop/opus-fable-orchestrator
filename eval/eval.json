@@ -9,8 +9,8 @@
     "consultant gate",
     "orchestrator-consultant-gate",
     "second opinion",
-    "before reporting a numeric score",
-    "merge"
+    "audit then change",
+    "work order"
   ],
   "override_needles": ["resolve-consult.py", "claude-fable-5"],
   "triggers_forbidden": ["fable 자문", "전문가 의견", "자문 받아와", "페이블 자문"],

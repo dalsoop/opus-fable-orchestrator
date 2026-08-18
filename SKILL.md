@@ -4,14 +4,15 @@ license: MIT
 compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, …).
 metadata:
   author: dalsoop
-  version: "1.11.0"
+  version: "1.12.0"
   locale: en
 description: >-
-  Ask a read-only second opinion before you score, merge, or ship, without
-  switching the session agent. Use for orchestrator-consultant-gate, consultant
-  gate, expert consult, or before merge/ship. Apply before reporting a numeric
-  score, before 10+ file edits, or when scores only rose / self-declared 100.
-  Skip grep, mechanical edits, clear bugfix.
+  Ask a read-only second opinion on the plan after a work order, before the
+  agent starts a full audit-and-change. Use for orchestrator-consultant-gate,
+  consultant gate, expert consult, audit then change, sweep and change, or
+  second opinion. Apply when the user assigns work, especially a full audit
+  then change, or before 10+ file edits from that plan. Skip grep, mechanical
+  edits, clear bugfix.
 ---
 
 # Orchestrator Consultant Gate
@@ -22,7 +23,7 @@ Send that plan through a **GATE**. A different model **checks** it read-only (no
 
 ## Gate
 
-**Must** before: reporting a score; starting 10+ file edits; merge/ship.
+**Must** after a **work order**, before starting the planned **audit-then-change**. Not later at merge.
 
 **Must** if 2+ of: scores only rose; self-declared 100 / "done" / "complete"; no evidence outside diffs; same agent wrote and scored.
 

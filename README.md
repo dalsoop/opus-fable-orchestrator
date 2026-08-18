@@ -1,6 +1,6 @@
 # orchestrator-consultant-gate
 
-Get an independent, read-only second opinion before you score, merge, ship, or make a large change—without changing the agent running your session.
+After a work order, get a read-only second opinion on the plan—before the agent starts a full audit-then-change. The session agent does not switch.
 
 English (`main`). Korean: branch [`ko`](https://github.com/dalsoop/orchestrator-consultant-gate/tree/ko).
 
@@ -19,7 +19,7 @@ Korean: `npx skills add dalsoop/orchestrator-consultant-gate@ko -g -y`
   <img src="assets/how-the-gate-works-en.png" alt="One AI writes the plan. Another AI reviews it." width="920">
 </p>
 
-One AI writes the **plan**. **GATE** before work. The other AI **reviews** it read-only. Notes go back. Same session.
+One AI writes the **plan** from the work order. **GATE** before the audit-then-change starts. The other AI **reviews** it read-only. Notes go back. Same session.
 
 The consult child is a different model from the executor. Default family is `fable` → `claude-fable-5`. This turn, pick another with `--name grok`, `--name gpt`, or `--name gemini`. Blocked spawn → `fallback_slug` in the same `--json`.
 
