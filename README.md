@@ -13,12 +13,15 @@ Each locale is a **git branch**. Install the branch you want.
 
 You are on **English (`main`)**.
 
-**Parent model:** `/model claude-opus-4-6[1m]` — Opus 4.6 1M is the executor. Fable is read-only. **Do not use Opus 5.0 as the parent — error rate is high.**
+**Parent:** `/model` from `agent-model-registry get claude` (keep `[1m]` if the host uses it). Consult is not the parent. **Do not use Opus 5.0 as parent.**
 
 ```bash
 npx skills add dalsoop/opus-fable-orchestrator -g -y
+agent-model-registry get fable
 python3 eval/run.py
 ```
+
+Change the consult default: `agent-model-registry set fable <id>`. GUI: `agent-model-registry open`. Installed skills: `agent-skills open`.
 
 <p align="center"><strong>English</strong></p>
 <p align="center">

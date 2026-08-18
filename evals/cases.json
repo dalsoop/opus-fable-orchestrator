@@ -1,0 +1,36 @@
+{
+  "skill": "opus-fable-orchestrator",
+  "notes": "Happy prompts must match description triggers. Negatives must not look like a score/merge/consult. Static gate is python3 eval/run.py.",
+  "cases": [
+    {
+      "id": "happy-01-second-opinion",
+      "should_trigger": true,
+      "prompt": "second opinion on this product score before I tell the user 90/100",
+      "checks": { "preserve_tokens": ["consult"] }
+    },
+    {
+      "id": "happy-02-expert-consult",
+      "should_trigger": true,
+      "prompt": "expert consult before merge — I think we are done",
+      "checks": { "preserve_tokens": ["consult"] }
+    },
+    {
+      "id": "happy-03-swap-grok",
+      "should_trigger": true,
+      "prompt": "opus-fable consult with grok instead of fable",
+      "checks": { "preserve_tokens": ["agent-model-registry"] }
+    },
+    {
+      "id": "neg-01-grep",
+      "should_trigger": false,
+      "prompt": "grep the repo for TODO",
+      "checks": {}
+    },
+    {
+      "id": "neg-02-typo",
+      "should_trigger": false,
+      "prompt": "fix the typo in this one function",
+      "checks": {}
+    }
+  ]
+}
