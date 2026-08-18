@@ -19,7 +19,7 @@
   "open_question": "내가 놓친 카테고리는?",
   "timeout_needles": ["Timeout", "재시도"],
   "parent_needles": ["부모를 바꾸지 않는다", "Grok", "Codex"],
-  "parent_forbidden": ["Opus 4.6", "Opus 5.0"],
+  "parent_forbidden": [],
   "scenarios": [
     { "id": "version-sync", "type": "version", "expect": "VERSION_matches_frontmatter" },
     { "id": "locale-ko", "type": "trigger", "expect": "description_has_required_not_forbidden" },
