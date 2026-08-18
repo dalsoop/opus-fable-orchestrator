@@ -114,6 +114,9 @@ def run() -> int:
                 results.append(fail(sid, f"SKILL.md missing Task slug {slug!r}"))
             else:
                 results.append(ok(sid))
+        elif sc["expect"] == "skill_allows_consult_override":
+            miss = [n for n in EVAL.get("override_needles", []) if n not in skill_text]
+            results.append(fail(sid, f"missing={miss}") if miss else ok(sid))
         elif sc.get("harness") == "live":
             results.append(fail(sid, "live harness not implemented in run.py"))
         else:
