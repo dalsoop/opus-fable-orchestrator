@@ -9,12 +9,9 @@
     "opus-fable",
     "second opinion",
     "before reporting a numeric score",
-    "merge",
-    "consult with",
-    "fable 대신",
-    "agent-model-registry"
+    "merge"
   ],
-  "override_needles": ["agent-model-registry", "get fable", "allowlist"],
+  "override_needles": ["resolve-consult.py", "claude-fable-5-thinking-high"],
   "triggers_forbidden": ["fable 자문", "전문가 의견", "자문 받아와", "페이블 자문"],
   "briefing_sections": ["Raw evidence", "My interpretation", "My conclusion", "Questions"],
   "open_question": "What category did I miss?",
@@ -27,7 +24,7 @@
     { "id": "digest-template", "type": "roundtrip", "expect": "digest_has_accept_reject_defer" },
     { "id": "spawn-slug", "type": "roundtrip", "expect": "skill_contains_fable_slug" },
     { "id": "consult-override", "type": "roundtrip", "expect": "skill_allows_consult_override" },
-    { "id": "registry-get-fable", "type": "roundtrip", "expect": "registry_get_fable" },
+    { "id": "resolve-script", "type": "roundtrip", "expect": "resolve_consult_script" },
     { "id": "error-timeout", "type": "error", "expect": "skill_mentions_timeout_fallback" },
     { "id": "parent-model", "type": "roundtrip", "expect": "skill_requires_opus_parent" },
     {

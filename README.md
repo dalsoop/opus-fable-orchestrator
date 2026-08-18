@@ -17,7 +17,7 @@ You are on **English (`main`)**.
 
 ```bash
 npx skills add dalsoop/opus-fable-orchestrator -g -y
-agent-model-registry get fable
+python3 scripts/resolve-consult.py --json
 python3 eval/run.py
 ```
 
@@ -34,3 +34,16 @@ Change the consult default: `agent-model-registry set fable <id>`. GUI: `agent-m
 </p>
 
 [`SKILL.md`](SKILL.md) · [`templates/`](templates/) · [`eval/`](eval/) · MIT
+
+---
+
+# For agents
+
+Humans can stop above. Prefer [`SKILL.md`](SKILL.md) if both are loaded.
+
+1. **Parent:** `/model` from `agent-model-registry get claude` (keep `[1m]` if the host uses it). Consult is not the parent. Refuse `opus-5` / Opus 5.0 as parent.
+2. **Consult id:** `agent-model-registry get fable`, then map onto this host’s Task allowlist. User can override this turn or `set fable <id>`.
+3. **Must consult** before reporting a score; starting 10+ file edits; merge/ship. **Must** if 2+ of: scores only rose; self-declared 100 / "done"; no evidence outside diffs; maker=checker.
+4. **Must not** for grep, file reads, mechanical edits, clear bugfix.
+5. Brief `templates/fable-briefing.md`. Digest `templates/digest.md`. Read-only spawn. Timeout → proceed; retry at next gate.
+

@@ -99,24 +99,33 @@ def run() -> int:
             miss = [n for n in EVAL["timeout_needles"] if n.lower() not in skill_text.lower()]
             results.append(fail(sid, f"missing={miss}") if miss else ok(sid))
         elif sc["expect"] == "skill_requires_opus_parent":
-            if "agent-model-registry get claude" not in skill_text or "5.0" not in skill_text:
-                results.append(fail(sid, "parent must use registry get claude and refuse 5.0"))
+            if "5.0" not in skill_text:
+                results.append(fail(sid, "must refuse Opus 5.0 as parent"))
             else:
                 results.append(ok(sid))
-        elif sc["expect"] == "registry_get_fable":
-            import shutil
+        elif sc["expect"] == "resolve_consult_script":
+            import json as _json
             import subprocess
 
-            bin_ = shutil.which("agent-model-registry")
-            if not bin_:
-                results.append(fail(sid, "agent-model-registry not on PATH"))
+            script = ROOT / "scripts" / "resolve-consult.py"
+            if not script.is_file():
+                results.append(fail(sid, "missing scripts/resolve-consult.py"))
             else:
-                p = subprocess.run([bin_, "get", "fable"], capture_output=True, text=True)
-                out = (p.stdout or "").strip()
-                if p.returncode != 0 or not out:
-                    results.append(fail(sid, f"get fable failed rc={p.returncode} {out!r}"))
+                p = subprocess.run([sys.executable, str(script), "--json"], capture_output=True, text=True)
+                if p.returncode != 0:
+                    results.append(fail(sid, p.stderr or p.stdout or "script failed"))
                 else:
-                    results.append(ok(sid, out.splitlines()[-1]))
+                    try:
+                        data = _json.loads(p.stdout)
+                    except _json.JSONDecodeError:
+                        results.append(fail(sid, f"not json: {p.stdout!r}"))
+                    else:
+                        slug = data.get("slug") or ""
+                        want = EVAL.get("fable_model_slug", "")
+                        if want and want not in slug:
+                            results.append(fail(sid, f"slug {slug!r} missing {want!r}"))
+                        else:
+                            results.append(ok(sid, slug))
         elif sc["expect"] == "folder_matches_skill_name":
             if ROOT.name != EVAL["skill"]:
                 results.append(fail(sid, f"folder {ROOT.name!r} != name {EVAL['skill']!r}"))
