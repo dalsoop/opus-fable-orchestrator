@@ -27,4 +27,6 @@ The consult child is a different model from the executor. Default family is `fab
 
 [![skills.sh](https://skills.sh/b/dalsoop/orchestrator-consultant-gate)](https://skills.sh/dalsoop/orchestrator-consultant-gate)
 
+Score a `SKILL.md`: `npx skills add dalsoop/skill-audit -g -y`
+
 Not in `host-skills` catalog. Optional: `agent-model-registry set fable <id>`.
