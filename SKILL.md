@@ -1,5 +1,7 @@
 ---
 name: orchestrator-consultant-gate
+version: 1.12.0
+kind: skill
 license: MIT
 compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, …).
 metadata:
