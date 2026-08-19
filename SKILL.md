@@ -1,5 +1,7 @@
 ---
 name: orchestrator-consultant-gate-ko
+version: 1.12.0
+kind: skill
 license: MIT
 compatibility: 읽기 전용 하위 에이전트를 띄울 수 있는 호스트(Cursor Task, Claude Code Agent, Codex, …).
 metadata:
