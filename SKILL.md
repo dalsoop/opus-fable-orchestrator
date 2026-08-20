@@ -1,12 +1,12 @@
 ---
 name: orchestrator-consultant-gate
-version: 1.23.0
+version: 1.24.0
 kind: skill
 license: MIT
 compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.23.0"
+  version: "1.24.0"
   locale: en
 description: >-
   Ask a read-only second opinion on the plan after a work order, before the
@@ -52,7 +52,7 @@ If spawn is blocked, fallback once or skip. A skipped gate has no effect. A gate
 
 ## Check
 
-Keep this session. **Must this turn, before spawn:** `--list --json`. Pick a `selectable` name. Do not spawn without that list. `--list` stamps this session (`CONSULT_SESSION`, else `GROK_SESSION_ID` / `CLAUDE_SESSION`) for 3600 seconds. That stamp is **mistake-prevention, not a sandbox**; another process can set `CONSULT_SESSION`. `--print-spawn` is **Grok only**. Cursor and Claude Code spawn with Task/Agent. `--record` and `--print-spawn` exit 2 if that stamp is missing, stale, or from another session. `--record` also needs `--spawn-line` equal to this turn's `--print-spawn` stdout. Default is fable. Blocked pick is opus 4.6. `--report` is **usage history** (spawn receipts), not critic quality. Default `python3 eval/run.py` is static. Set `EVAL_LIVE=1` only when the user asked for a live consult. Live calls cost tokens. Without `EVAL_LIVE=1` the live harness does not spawn.
+Keep this session. **Must this turn, before spawn:** `--list --json`. Pick a `selectable` name. Do not spawn without that list. `--list` stamps this session (`CONSULT_SESSION`, else `GROK_SESSION_ID` / `CLAUDE_SESSION`) for 3600 seconds. That stamp is **mistake-prevention, not a sandbox**; another process can set `CONSULT_SESSION`. `--print-spawn` is **Grok only**. Cursor and Claude Code spawn with Task/Agent. `--record` and `--print-spawn` exit 2 if that stamp is missing, stale, or from another session. `--record` also needs `--spawn-line` equal to this turn's `--print-spawn` stdout. The same printed line cannot be recorded twice. Default is fable. Blocked pick is opus 4.6. `--report` is **usage history** (spawn receipts), not critic quality. Default `python3 eval/run.py` is static. Set `EVAL_LIVE=1` only when the user asked for a live consult. Live calls cost tokens. Without `EVAL_LIVE=1` the live harness does not spawn.
 
 ```bash
 python3 scripts/resolve-consult.py --list --json

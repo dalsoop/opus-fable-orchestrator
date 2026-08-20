@@ -426,7 +426,12 @@ def main() -> int:
             )
             return 2
         line = claude_spawn_line(slug)
-        if not patch_stamp(spawn_line=line, spawn_hash=line_hash(line), spawn_name=args.name.lower()):
+        if not patch_stamp(
+            spawn_line=line,
+            spawn_hash=line_hash(line),
+            spawn_name=args.name.lower(),
+            spawn_used=False,
+        ):
             print("run --list first this turn", file=sys.stderr)
             return 2
         print(line)
@@ -437,6 +442,9 @@ def main() -> int:
         stamp = load_list_stamp() or {}
         want = stamp.get("spawn_hash")
         got_line = args.spawn_line.strip()
+        if stamp.get("spawn_used"):
+            print("spawn-line already recorded this stamp", file=sys.stderr)
+            return 2
         if not want or not got_line or line_hash(got_line) != want:
             print("pass --spawn-line from this turn's --print-spawn", file=sys.stderr)
             return 2
@@ -453,6 +461,7 @@ def main() -> int:
             "spawn_hash": want,
         }
         path = record(rec)
+        patch_stamp(spawn_used=True)
         if args.json:
             rec["receipt"] = str(path)
             print(json.dumps(rec))

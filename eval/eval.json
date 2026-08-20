@@ -34,7 +34,8 @@
   "parent_needles": ["Do not switch parent", "Grok", "Codex"],
   "parent_forbidden": [],
   "locale_shared_needles": ["--print-spawn", "--spawn-line", "CONSULT_SESSION", "3600", "--list", "--record", "EVAL_LIVE", "4.6", "GROK_AGENT"],
-  "critic_needles": ["critic is Fable", "parent agent", "do not agree", "before orchestration", "not ground truth", "If the user writes Korean", "orchestrator-consultant-gate-ko", "Do not translate this skill", "before dispatch", "false confidence", "--name grok", "--name opus", "4.6", "before spawn", "usage history", "EVAL_LIVE", "exit 2", "--print-spawn", "CONSULT_SESSION", "3600", "--spawn-line", "Grok only", "not a sandbox"],
+  "locale_procedure_order": ["--list --json", "--print-spawn", "--spawn-line"],
+  "critic_needles": ["critic is Fable", "parent agent", "do not agree", "before orchestration", "not ground truth", "If the user writes Korean", "orchestrator-consultant-gate-ko", "Do not translate this skill", "before dispatch", "false confidence", "--name grok", "--name opus", "4.6", "before spawn", "usage history", "EVAL_LIVE", "exit 2", "--print-spawn", "CONSULT_SESSION", "3600", "--spawn-line", "Grok only", "not a sandbox", "cannot be recorded twice"],
   "scenarios": [
     { "id": "version-sync", "type": "version", "expect": "VERSION_matches_frontmatter" },
     { "id": "locale-en", "type": "trigger", "expect": "description_has_required_not_forbidden" },
@@ -65,6 +66,7 @@
     { "id": "list-stamp-stale", "type": "error", "expect": "list_stamp_stale" },
     { "id": "record-requires-spawn-line", "type": "error", "expect": "record_requires_spawn_line" },
     { "id": "locale-shared-procedure", "type": "roundtrip", "expect": "locale_shared_procedure" },
+    { "id": "locale-procedure-order", "type": "roundtrip", "expect": "locale_procedure_order" },
     { "id": "sibling-script-same", "type": "roundtrip", "expect": "sibling_script_same" },
     { "id": "eval-live-gated", "type": "error", "expect": "eval_live_gated" },
     { "id": "observability", "type": "roundtrip", "expect": "skill_mentions_observability" },
