@@ -35,7 +35,7 @@
   "parent_forbidden": [],
   "locale_shared_needles": ["--print-spawn", "--spawn-line", "CONSULT_SESSION", "3600", "--list", "--record", "EVAL_LIVE", "4.6", "GROK_AGENT", "--exec-spawn", "--briefing", "PreToolUse", "block-hand-claude-p.py"],
   "locale_procedure_order": ["--list --json", "--exec-spawn", "--print-spawn", "--spawn-line"],
-  "critic_needles": ["critic is Fable", "parent agent", "do not agree", "before orchestration", "not ground truth", "If the user writes Korean", "orchestrator-consultant-gate-ko", "Do not translate this skill", "before dispatch", "false confidence", "--name grok", "--name opus", "4.6", "before spawn", "usage history", "EVAL_LIVE", "exit 2", "--print-spawn", "CONSULT_SESSION", "3600", "--spawn-line", "Grok only", "not a sandbox", "cannot be recorded twice", "--exec-spawn", "--briefing", "GROK_SESSION_ID", "--install-hook", "Grok has no PreToolUse"],
+  "critic_needles": ["critic is Fable", "parent agent", "do not agree", "before orchestration", "not ground truth", "If the user writes Korean", "orchestrator-consultant-gate-ko", "Do not translate this skill", "before dispatch", "false confidence", "--name grok", "--name opus", "4.6", "before spawn", "usage history", "EVAL_LIVE", "exit 2", "--print-spawn", "CONSULT_SESSION", "3600", "--spawn-line", "Grok only", "not a sandbox", "cannot be recorded twice", "--exec-spawn", "--briefing", "GROK_SESSION_ID", "--install-hook", "Grok has no PreToolUse", "--uninstall-hook"],
   "scenarios": [
     { "id": "version-sync", "type": "version", "expect": "VERSION_matches_frontmatter" },
     { "id": "locale-en", "type": "trigger", "expect": "description_has_required_not_forbidden" },
