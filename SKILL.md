@@ -1,12 +1,12 @@
 ---
 name: orchestrator-consultant-gate-ko
-version: 1.28.0
+version: 1.29.0
 kind: skill
 license: MIT
 compatibility: 읽기 전용 하위 에이전트를 띄울 수 있는 호스트(Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.28.0"
+  version: "1.29.0"
   locale: ko
 description: >-
   업무 지시 뒤, 전수조사해서 바꾸기 전에 계획을 읽기 전용으로 검수받는다. 지금

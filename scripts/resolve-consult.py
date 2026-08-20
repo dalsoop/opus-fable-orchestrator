@@ -171,7 +171,7 @@ def spawn_hint(host: str, slug: str) -> dict[str, str]:
     )
     if slug.startswith("claude-") or "fable" in slug.lower():
         grok = (
-            f'First: `claude -p --model {slug} --max-turns 1`. '
+            f'First: `claude -p --model {slug} --max-turns 3 --disable-slash-commands`. '
             f'Do not start with spawn_subagent. '
             f'spawn_subagent only if Claude CLI is missing and the slug is a Grok model.'
         )
@@ -221,7 +221,7 @@ def list_critics(host: str, allow: list[str]) -> dict:
 
 
 def claude_spawn_line(slug: str) -> str:
-    return f"claude -p --model {slug} --max-turns 1"
+    return f"claude -p --model {slug} --max-turns 3 --disable-slash-commands"
 
 
 def line_hash(line: str) -> str:

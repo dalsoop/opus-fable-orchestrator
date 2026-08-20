@@ -557,7 +557,7 @@ def run() -> int:
                     )
                     if listed.returncode != 0 or printed.returncode != 0:
                         results.append(fail(sid, f"list+print rc list={listed.returncode} print={printed.returncode}"))
-                    elif not line.startswith("claude -p --model ") or "--max-turns 1" not in line:
+                    elif not line.startswith("claude -p --model ") or "--max-turns 3" not in line:
                         results.append(fail(sid, f"bad spawn line {line!r}"))
                     elif grok_named.returncode != 2:
                         results.append(fail(sid, f"grok print-spawn rc={grok_named.returncode}"))
@@ -750,7 +750,7 @@ def run() -> int:
                     results.append(fail(sid, f"no-list rc={denied.returncode}"))
                 elif listed.returncode != 0 or dry.returncode != 0:
                     results.append(fail(sid, f"list/dry rc {listed.returncode}/{dry.returncode}"))
-                elif not line.startswith("claude -p --model ") or "--max-turns 1" not in line:
+                elif not line.startswith("claude -p --model ") or "--max-turns 3" not in line:
                     results.append(fail(sid, f"bad dry line {line!r}"))
                 elif live_no_file.returncode != 2:
                     results.append(fail(sid, f"no briefing rc={live_no_file.returncode}"))
@@ -812,6 +812,7 @@ def run() -> int:
                     "claude -p",
                     "claude -p --model=claude-fable-5",
                     "sh -c 'claude -p --model claude-fable-5'",
+                    "claude -p --model claude-fable-5 # resolve-consult.py",
                 ]
                 denied_ok = True
                 detail_fail = ""
@@ -856,6 +857,27 @@ def run() -> int:
             script = ROOT / "scripts" / "resolve-consult.py"
             with tempfile.TemporaryDirectory() as tmp:
                 settings = _Path(tmp) / "settings.json"
+                settings.write_text(
+                    json.dumps(
+                        {
+                            "hooks": {
+                                "PreToolUse": [
+                                    {
+                                        "matcher": "Bash",
+                                        "hooks": [
+                                            {
+                                                "type": "command",
+                                                "command": "echo other-bash-hook",
+                                                "timeout": 3,
+                                            }
+                                        ],
+                                    }
+                                ]
+                            }
+                        }
+                    ),
+                    encoding="utf-8",
+                )
                 env = {**os.environ, "ORCHESTRATOR_CONSULT_HOOK_SETTINGS": str(settings)}
                 installed = subprocess.run(
                     [sys.executable, str(script), "--install-hook", "--json"],
@@ -893,8 +915,10 @@ def run() -> int:
                         ]
                         if gone.returncode != 0 or any("block-hand-claude-p.py" in c for c in cmds2):
                             results.append(fail(sid, f"uninstall leftover {cmds2}"))
+                        elif "echo other-bash-hook" not in cmds2:
+                            results.append(fail(sid, f"uninstalled other Bash hook {cmds2}"))
                         else:
-                            results.append(ok(sid, "Bash PreToolUse timeout=3 uninstall ok"))
+                            results.append(ok(sid, "Bash PreToolUse timeout=3 uninstall keeps others"))
         elif sc["expect"] == "locale_shared_procedure":
             needles = EVAL.get("locale_shared_needles") or []
             loc = EVAL.get("locale")
