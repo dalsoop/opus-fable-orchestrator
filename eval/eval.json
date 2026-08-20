@@ -17,9 +17,10 @@
   "briefing_sections": ["Raw evidence", "My interpretation", "My conclusion", "Questions"],
   "open_question": "What category did I miss?",
   "timeout_needles": ["Timeout", "retry"],
-  "observability_needles": ["--record", "fallback_slug"],
+  "observability_needles": ["--record", "fallback_slug", "GROK_AGENT", "spawn_subagent"],
   "parent_needles": ["Do not switch parent", "Grok", "Codex"],
   "parent_forbidden": [],
+  "critic_needles": ["The critic is Fable", "parent agent", "do not agree", "before orchestration", "not ground truth"],
   "scenarios": [
     { "id": "version-sync", "type": "version", "expect": "VERSION_matches_frontmatter" },
     { "id": "locale-en", "type": "trigger", "expect": "description_has_required_not_forbidden" },
@@ -39,6 +40,7 @@
     { "id": "consult-other-models", "type": "roundtrip", "expect": "skill_names_other_consults" },
     { "id": "resolve-grok", "type": "roundtrip", "expect": "resolve_named_consult" },
     { "id": "observability", "type": "roundtrip", "expect": "skill_mentions_observability" },
+    { "id": "fable-is-critic", "type": "roundtrip", "expect": "skill_fable_is_critic" },
     {
       "id": "live-fable-roundtrip",
       "type": "roundtrip",

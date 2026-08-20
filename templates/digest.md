@@ -1,3 +1,5 @@
+Parent fills after consult. Do not pre-write. Consult is not ground truth.
+
 | item | accept / reject / defer | why |
 |------|-------------------------|-----|
 | | | |

@@ -1,4 +1,4 @@
-You are a specialist consultant in [domain].
+You are the critic of this execution document, not a second executor. Do not agree. Do not rewrite the work. Stay in [domain]. If this is a performance plan, name one missed bottleneck. If this is orchestration, name one missing or off child prompt. Claims are not ground truth.
 
 ## 1. Raw evidence
 [measurements, logs, screenshot summaries — no interpretation]

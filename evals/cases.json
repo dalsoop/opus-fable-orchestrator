@@ -27,6 +27,18 @@
       "checks": { "preserve_tokens": ["consult"] }
     },
     {
+      "id": "happy-05-fable-critic",
+      "should_trigger": true,
+      "prompt": "work order in; fable critic on the plan before audit then change",
+      "checks": { "preserve_tokens": ["consult"] }
+    },
+    {
+      "id": "happy-06-grok-host",
+      "should_trigger": true,
+      "prompt": "second opinion on this plan after the work order from a Grok TUI session, audit then change",
+      "checks": { "preserve_tokens": ["consult"] }
+    },
+    {
       "id": "neg-01-grep",
       "should_trigger": false,
       "prompt": "grep the repo for TODO",
