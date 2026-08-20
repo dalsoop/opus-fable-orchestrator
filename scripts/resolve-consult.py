@@ -23,6 +23,7 @@ from pathlib import Path
 
 FAMILY = "claude-fable-5"
 FALLBACK_NAME = "grok"
+WINDOW_1M = "[1m]"
 HOSTS = ("cursor", "claude", "codex", "grok")
 RECEIPT = Path.home() / ".orchestrator-consultant-gate" / "receipts.jsonl"
 
@@ -113,10 +114,32 @@ def prefer_fable(host: str, allow: list[str], family: str) -> str:
     return family
 
 
+def with_1m(base: str) -> str:
+    if not base or WINDOW_1M in base:
+        return base
+    return f"{base}{WINDOW_1M}"
+
+
+def map_same_family(rid: str, allow: list[str]) -> str | None:
+    """Keep the registry family. Do not remap opus-4-6 onto opus-5."""
+    if not allow:
+        return rid
+    if rid in allow:
+        return rid
+    bare = rid.replace(WINDOW_1M, "")
+    for a in allow:
+        if a == rid or a == bare or a.startswith(bare + "["):
+            return a
+    return rid
+
+
 def resolve(name: str, host: str, allow: list[str]) -> tuple[str | None, str]:
     rid = registry_get(name)
-    want_fable = "fable" in name.lower()
+    n = name.lower()
+    want_fable = "fable" in n
     raw = rid or (FAMILY if want_fable else name)
+    if n == "opus":
+        return rid, map_same_family(with_1m(raw), allow)
     mapped = map_to_allowlist(raw, allow)
     if mapped:
         return rid, mapped
@@ -135,7 +158,7 @@ def spawn_hint(host: str, slug: str) -> dict[str, str]:
             f'spawn_subagent({{ description: "Consult", subagent_type: "general-purpose", '
             f'model: "{slug}", prompt: <briefing> }}). '
             f'If the host cannot spawn that slug, blocked → fallback_slug. '
-            f'Fable: `claude -p --model {slug} --max-turns 1` when Claude CLI can run the critic.'
+            f'`claude -p --model {slug} --max-turns 1` when Claude CLI can run the critic.'
         ),
         "host": host,
     }

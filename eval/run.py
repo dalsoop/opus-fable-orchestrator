@@ -308,7 +308,7 @@ def run() -> int:
             miss = [n for n in EVAL.get("observability_needles", ["--record", "fallback_slug"]) if n not in skill_text]
             results.append(fail(sid, f"missing={miss}") if miss else ok(sid))
         elif sc["expect"] == "skill_names_other_consults":
-            miss = [n for n in ("--name grok", "--name gpt", "--name gemini") if n not in skill_text]
+            miss = [n for n in ("--name grok", "--name gpt", "--name gemini", "--name opus") if n not in skill_text]
             results.append(fail(sid, f"missing={miss}") if miss else ok(sid))
         elif sc["expect"] == "resolve_named_consult":
             import subprocess
@@ -326,6 +326,25 @@ def run() -> int:
             else:
                 slug = data.get("slug") or ""
                 if p.returncode != 0 or data.get("name") != "grok" or not slug:
+                    results.append(fail(sid, f"rc={p.returncode} {data!r}"))
+                else:
+                    results.append(ok(sid, slug))
+        elif sc["expect"] == "resolve_opus_1m":
+            import subprocess
+
+            script = ROOT / "scripts" / "resolve-consult.py"
+            p = subprocess.run(
+                [sys.executable, str(script), "--name", "opus", "--json"],
+                capture_output=True,
+                text=True,
+            )
+            try:
+                data = json.loads(p.stdout)
+            except json.JSONDecodeError:
+                results.append(fail(sid, f"not json: {p.stdout!r}"))
+            else:
+                slug = data.get("slug") or ""
+                if p.returncode != 0 or data.get("name") != "opus" or "[1m]" not in slug:
                     results.append(fail(sid, f"rc={p.returncode} {data!r}"))
                 else:
                     results.append(ok(sid, slug))

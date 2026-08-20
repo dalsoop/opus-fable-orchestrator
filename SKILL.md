@@ -1,12 +1,12 @@
 ---
 name: orchestrator-consultant-gate-ko
-version: 1.16.1
+version: 1.17.0
 kind: skill
 license: MIT
 compatibility: 읽기 전용 하위 에이전트를 띄울 수 있는 호스트(Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.16.1"
+  version: "1.17.0"
   locale: ko
 description: >-
   업무 지시 뒤, 전수조사해서 바꾸기 전에 계획을 읽기 전용으로 검수받는다. 지금
@@ -25,9 +25,7 @@ description: >-
 
 이 세션에서 **실행 문서**를 작성한다(Grok, Codex, Claude, GPT, …). 부모를 바꾸지 않는다.
 
-실행 문서는 계획과, 오케스트레이션에 넘길 자식 프롬프트다. **오케스트레이션에 착수하기 전**에 비판적으로 다듬는다. **검수자는 페이블**이다. 읽기 전용으로 띄운다(파일·도구 없음). 반박한다. 소화는 네가 한다. 검수자는 실행자를 대체하지 않는다.
-
-검수는 토큰을 추가로 쓴다. 나온 말은 추상적이고 확률적이다. **정답이 아니다.** 항목마다 accept / reject / defer 와 이유를 붙인다.
+실행 문서는 계획과, 오케스트레이션에 넘길 자식 프롬프트다. **오케스트레이션에 착수하기 전**에 비판적으로 다듬는다. **기본 검수자는 페이블**이다. 읽기 전용으로 띄운다(파일·도구 없음). 반박한다. 소화는 네가 한다. 나온 말은 **정답이 아니다.** 항목마다 accept / reject / defer 와 이유를 붙인다.
 
 ## 게이트
 
@@ -60,11 +58,12 @@ python3 scripts/resolve-consult.py --json
 python3 scripts/resolve-consult.py --name grok --json
 python3 scripts/resolve-consult.py --name gpt --json
 python3 scripts/resolve-consult.py --name gemini --json
+python3 scripts/resolve-consult.py --name opus --json
 ```
 
-`--json` → `{host, registry, slug, name, fallback_slug, spawn, read_only}`. `CONSULT_HOST`: cursor|claude|codex|grok. Cursor만 Task slug(`thinking-high`가 목록에 있으면). Claude/Codex/Grok에서 `cursor --list-models` 금지. CLI 없으면 스크립트가 그 계열을 찍음. Grok TUI는 `GROK_AGENT=1`.
+`--json` → `{host, registry, slug, name, fallback_slug, spawn, read_only}`. `CONSULT_HOST`: cursor|claude|codex|grok. `slug`를 쓴다. 스킬에 모델 id를 복사하지 않는다. Cursor만 Task slug(`thinking-high`가 목록에 있으면). `--name opus`는 `agent-model-registry get opus`에, 호스트가 `[1m]`을 받으면 1M 창 접미사를 붙인다. Claude/Codex/Grok에서 `cursor --list-models` 금지. CLI 없으면 스크립트가 그 계열을 찍음. Grok TUI는 `GROK_AGENT=1`.
 
-자식이 **막히면**(Cursor Review Data Policy, HTTP 402, Grok가 `claude-fable-5`를 못 띄움): `fallback_slug` 한 번, 또는 `--name grok`. 아니면 건너뛰고 다음 게이트. 멈추지 말 것. Grok에서는 Claude CLI가 있으면 `claude -p --model claude-fable-5 --max-turns 1`로 페이블을 돌릴 수 있다.
+자식이 **막히면**(Cursor Review Data Policy, HTTP 402, Grok가 페이블 slug를 못 띄움): `fallback_slug` 한 번, 또는 `--name grok`. 아니면 건너뛰고 다음 게이트. 멈추지 말 것. Grok에서는 Claude CLI가 있으면 `claude -p --model <slug> --max-turns 1`.
 
 `templates/` 는 뼈대다. **부모 에이전트**가 채운다. 사람이 게이트 전에 쓰지 않는다.
 
