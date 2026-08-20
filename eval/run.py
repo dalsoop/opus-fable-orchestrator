@@ -681,7 +681,16 @@ def run() -> int:
                 elif ok_rec.returncode != 0:
                     results.append(fail(sid, f"matching spawn-line rc={ok_rec.returncode} {ok_rec.stderr[-400:]}"))
                 else:
-                    results.append(ok(sid, "missing/wrong=2 match=0"))
+                    replay = subprocess.run(
+                        [sys.executable, str(script), "--record", "--ok", "--read-only", "--spawn-line", line],
+                        capture_output=True,
+                        text=True,
+                        env=env,
+                    )
+                    if replay.returncode != 2:
+                        results.append(fail(sid, f"replay rc={replay.returncode}"))
+                    else:
+                        results.append(ok(sid, "missing/wrong/replay=2 match=0"))
         elif sc["expect"] == "locale_shared_procedure":
             needles = EVAL.get("locale_shared_needles") or []
             loc = EVAL.get("locale")
@@ -701,6 +710,37 @@ def run() -> int:
                     results.append(fail(sid, f"here={miss_here} sibling={miss_there}"))
                 else:
                     results.append(ok(sid, ",".join(needles)))
+        elif sc["expect"] == "locale_procedure_order":
+            order = EVAL.get("locale_procedure_order") or []
+            loc = EVAL.get("locale")
+            other = ROOT.parent / (
+                "orchestrator-consultant-gate-ko" if loc == "en" else "orchestrator-consultant-gate"
+            )
+
+            def _pos(text: str) -> list[int] | str:
+                pos = []
+                last = -1
+                for n in order:
+                    i = text.find(n)
+                    if i < 0:
+                        return n
+                    if i <= last:
+                        return f"order {n}"
+                    pos.append(i)
+                    last = i
+                return pos
+
+            if not order:
+                results.append(fail(sid, "locale_procedure_order empty"))
+            elif not (other / "SKILL.md").is_file():
+                results.append({"id": sid, "ok": True, "detail": "skipped (no sibling checkout)", "skipped": True})
+            else:
+                here_pos = _pos(skill_text)
+                there_pos = _pos((other / "SKILL.md").read_text(encoding="utf-8"))
+                if isinstance(here_pos, str) or isinstance(there_pos, str):
+                    results.append(fail(sid, f"here={here_pos} sibling={there_pos}"))
+                else:
+                    results.append(ok(sid, ",".join(order)))
         elif sc["expect"] == "sibling_script_same":
             import hashlib
 
