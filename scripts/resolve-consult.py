@@ -32,6 +32,7 @@ HOSTS = ("cursor", "claude", "codex", "grok")
 HOOK_NAME = "block-hand-claude-p.py"
 HOOK_TIMEOUT_S = 3
 STYLE_NAME = "consult-gate-brief"
+ENV_OPUS = "ANTHROPIC_DEFAULT_OPUS_MODEL"
 STATE = Path(os.environ.get("ORCHESTRATOR_CONSULT_HOME", str(Path.home() / ".orchestrator-consultant-gate")))
 RECEIPT = STATE / "receipts.jsonl"
 LIST_STAMP = STATE / "last-list.json"
@@ -373,6 +374,11 @@ def pin_effective_for(rid: str | None, env_opus: str | None) -> bool:
     return True
 
 
+def opus_env_id(rid: str | None, slug: str) -> str:
+    raw = (rid or slug or "").replace(WINDOW_1M, "")
+    return raw
+
+
 def install_claude(settings: Path, styles_dir: Path, force_style: bool) -> dict:
     src = style_src()
     if not src.is_file():
@@ -391,36 +397,46 @@ def install_claude(settings: Path, styles_dir: Path, force_style: bool) -> dict:
         data = {}
     prev_model = data.get("model")
     prev_style = data.get("outputStyle")
+    env_block = data.get("env") if isinstance(data.get("env"), dict) else {}
+    prev_env_opus = env_block.get(ENV_OPUS)
     sidecar = load_claude_install() or {}
     if "prev_model" not in sidecar:
         sidecar["prev_model"] = prev_model
         sidecar["prev_outputStyle"] = prev_style
+        sidecar["prev_env_opus"] = prev_env_opus
     host = detect_host()
     rid, slug = resolve("opus", host, allowlist(host))
     data["model"] = slug
+    env_id = opus_env_id(rid, slug)
+    env_block = dict(env_block)
+    env_block[ENV_OPUS] = env_id
+    data["env"] = env_block
     style_set = False
     if force_style or not prev_style:
         data["outputStyle"] = STYLE_NAME
         style_set = True
     sidecar["pinned_model"] = slug
+    sidecar["pinned_env_opus"] = env_id
     sidecar["style_name"] = STYLE_NAME
     save_claude_install(sidecar)
     settings.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     body = dest.read_text(encoding="utf-8")
-    env_opus = os.environ.get("ANTHROPIC_DEFAULT_OPUS_MODEL")
+    process_env = os.environ.get(ENV_OPUS)
+    written_env = env_block.get(ENV_OPUS)
     return {
         "settings": str(settings),
         "model": slug,
         "generation": OPUS_GEN,
         "generation_ok": generation_ok(rid, OPUS_GEN),
-        "pin_effective": pin_effective_for(rid, env_opus),
+        "pin_effective": pin_effective_for(rid, written_env),
         "outputStyle": data.get("outputStyle"),
         "outputStyle_set": style_set,
         "outputStyle_kept": None if style_set else prev_style,
         "style_file": str(dest),
         "keep_coding_instructions": "keep-coding-instructions: true" in body,
         "claude_md_written": False,
-        "env_opus": env_opus,
+        "env_opus": written_env,
+        "env_opus_process": process_env,
         "backup": str(bak) if bak else None,
         "sidecar": str(claude_install_state()),
     }
@@ -435,7 +451,9 @@ def uninstall_claude(settings: Path, styles_dir: Path) -> dict:
     sidecar = load_claude_install() or {}
     prev_model = sidecar.get("prev_model")
     prev_style = sidecar.get("prev_outputStyle")
+    prev_env_opus = sidecar.get("prev_env_opus")
     pinned = sidecar.get("pinned_model")
+    pinned_env = sidecar.get("pinned_env_opus")
     if not settings.is_file():
         path = claude_install_state()
         if path.is_file():
@@ -459,6 +477,17 @@ def uninstall_claude(settings: Path, styles_dir: Path) -> dict:
             data["model"] = prev_model
         else:
             data.pop("model", None)
+    env_block = data.get("env") if isinstance(data.get("env"), dict) else {}
+    if pinned_env and env_block.get(ENV_OPUS) == pinned_env:
+        env_block = dict(env_block)
+        if prev_env_opus:
+            env_block[ENV_OPUS] = prev_env_opus
+        else:
+            env_block.pop(ENV_OPUS, None)
+        if env_block:
+            data["env"] = env_block
+        else:
+            data.pop("env", None)
     settings.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     path = claude_install_state()
     if path.is_file():
