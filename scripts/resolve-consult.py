@@ -6,7 +6,8 @@ Host: CONSULT_HOST, else this session (CURSOR_AGENT / CLAUDECODE / Codex / GROK_
 Cursor Task slugs are used only when the host is Cursor. Never treat a
 random `agent` binary on PATH as Cursor.
 
-Default JSON includes `fallbacks` (grok and opus 4.6) plus legacy `fallback_slug`.
+`--list` prints selectable critics. `--report` is usage history from receipts (not critic quality).
+Default JSON includes `fallbacks` (opus 4.6 first) plus legacy `fallback_slug`.
 `--record` appends one line to ~/.orchestrator-consultant-gate/receipts.jsonl.
 """
 
@@ -22,7 +23,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 FAMILY = "claude-fable-5"
-FALLBACK_NAMES = ("grok", "opus")
+LIST_NAMES = ("fable", "opus", "grok", "gpt", "gemini")
+FALLBACK_NAMES = ("opus", "grok")
 OPUS_GEN = "opus-4-6"
 WINDOW_1M = "[1m]"
 HOSTS = ("cursor", "claude", "codex", "grok")
@@ -159,26 +161,94 @@ def spawn_hint(host: str, slug: str) -> dict[str, str]:
     cursor = (
         f'Task({{ description: "Consult", subagent_type: "generalPurpose", '
         f'model: "{slug}", prompt: <briefing> }}). '
-        f'If Task is blocked, retry `--name grok` or `--name opus` (opus 4.6).'
+        f'If Task is blocked, pick opus from `--list` (4.6). Do not use grok first.'
     )
     if slug.startswith("claude-") or "fable" in slug.lower():
         grok = (
-            f'`claude -p --model {slug} --max-turns 1` when Claude CLI exists. '
-            f'spawn_subagent when the slug is a Grok model. '
-            f'Blocked → `--name grok` or `--name opus` (opus 4.6).'
+            f'First: `claude -p --model {slug} --max-turns 1`. '
+            f'Do not start with spawn_subagent. '
+            f'spawn_subagent only if Claude CLI is missing and the slug is a Grok model.'
         )
+        first = "claude -p"
+    elif slug.startswith("grok-"):
+        grok = f'spawn_subagent({{ model: "{slug}" }}) on Grok. Do not pass this slug to claude -p.'
+        first = "spawn_subagent"
     else:
-        grok = (
-            "spawn_subagent when the slug is a Grok model. "
-            "Otherwise `--name grok` or `--name opus` (opus 4.6) and spawn that slug."
-        )
+        grok = "Unresolved. Pick a resolved name from `--list`."
+        first = "skip"
     return {
         "read_only": "no files, no tools; critic, not a second executor",
+        "first": first,
         "cursor": cursor,
         "claude": f'Agent({{ model: "{slug}", prompt: <briefing> }})',
         "codex": f"-m {slug}",
         "grok": grok,
         "host": host,
+    }
+
+
+def catalog_item(name: str, host: str, allow: list[str]) -> dict:
+    rid, slug = resolve(name, host, allow)
+    spawn = spawn_hint(host, slug)
+    resolved = bool(rid) or (name == "fable")
+    item: dict = {
+        "name": name,
+        "registry": rid,
+        "slug": slug,
+        "resolved": resolved,
+        "selectable": resolved,
+        "gate_default": name == "fable",
+        "gate_blocked": name == "opus",
+        "spawn_first": spawn["first"],
+        "spawn": spawn,
+    }
+    if name == "opus":
+        item["generation"] = OPUS_GEN
+        item["generation_ok"] = generation_ok(rid, OPUS_GEN)
+        item["selectable"] = bool(item["generation_ok"])
+    return item
+
+
+def list_critics(host: str, allow: list[str]) -> dict:
+    critics = [catalog_item(n, host, allow) for n in LIST_NAMES]
+    return {"host": host, "role": "critic", "critics": critics}
+
+
+def report_receipts() -> dict:
+    rows: list[dict] = []
+    if RECEIPT.is_file():
+        for line in RECEIPT.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    by: dict[str, dict] = {}
+    for r in rows:
+        key = f"{r.get('name') or '?'}|{r.get('slug') or '?'}|{r.get('host') or '?'}"
+        slot = by.setdefault(
+            key,
+            {
+                "name": r.get("name"),
+                "slug": r.get("slug"),
+                "host": r.get("host"),
+                "n": 0,
+                "spawn_ok": 0,
+                "fallback_used": 0,
+            },
+        )
+        slot["n"] += 1
+        if r.get("spawn_ok"):
+            slot["spawn_ok"] += 1
+        if r.get("fallback_used"):
+            slot["fallback_used"] += 1
+    return {
+        "receipt": str(RECEIPT),
+        "n": len(rows),
+        "note": "usage history; not critic quality",
+        "by": list(by.values()),
     }
 
 
@@ -231,6 +301,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--name", default="fable")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--list", action="store_true", help="selectable critics")
+    ap.add_argument("--report", action="store_true", help="usage history from receipts")
     ap.add_argument("--record", action="store_true", help="append a receipt line")
     ap.add_argument("--ok", action="store_true")
     ap.add_argument("--read-only", action="store_true")
@@ -238,6 +310,30 @@ def main() -> int:
     args = ap.parse_args()
     host = detect_host()
     allow = allowlist(host)
+    if args.list:
+        data = list_critics(host, allow)
+        if args.json:
+            print(json.dumps(data))
+        else:
+            print(f"host={data['host']}")
+            for c in data["critics"]:
+                mark = "default" if c["gate_default"] else ("blocked" if c["gate_blocked"] else "override")
+                if not c["selectable"]:
+                    mark = "skip"
+                print(f"{c['name']:8} {c.get('registry') or '-':22} {c['slug']:28} {mark} spawn={c['spawn_first']}")
+        return 0
+    if args.report:
+        data = report_receipts()
+        if args.json:
+            print(json.dumps(data))
+        else:
+            print(f"n={data['n']} {data['note']}")
+            for row in data["by"]:
+                print(
+                    f"{row['name']} {row['slug']} host={row['host']} "
+                    f"n={row['n']} ok={row['spawn_ok']} fallback={row['fallback_used']}"
+                )
+        return 0
     data = payload(args.name, host, allow)
     if args.record:
         rec = {

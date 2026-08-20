@@ -1,12 +1,12 @@
 ---
 name: orchestrator-consultant-gate
-version: 1.19.0
+version: 1.21.0
 kind: skill
 license: MIT
 compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.19.0"
+  version: "1.21.0"
   locale: en
 description: >-
   Ask a read-only second opinion on the plan after a work order, before the
@@ -52,9 +52,11 @@ If spawn is blocked, fallback once or skip. A skipped gate has no effect. A gate
 
 ## Check
 
-Keep this session. Default child is Fable (`agent-model-registry get fable`). Spawn the `slug` from `--json`. Other models are this-turn override only:
+Keep this session. **Must this turn, before spawn:** `--list --json`. Pick a `selectable` name. Do not spawn without that list. Default is fable. Blocked pick is opus 4.6. `--report` is **usage history** (spawn receipts), not critic quality. Default `python3 eval/run.py` is static. Set `EVAL_LIVE=1` only when the user asked for a live consult. Live calls cost tokens.
 
 ```bash
+python3 scripts/resolve-consult.py --list --json
+python3 scripts/resolve-consult.py --report --json
 python3 scripts/resolve-consult.py --json
 python3 scripts/resolve-consult.py --name grok --json
 python3 scripts/resolve-consult.py --name gpt --json
@@ -62,15 +64,15 @@ python3 scripts/resolve-consult.py --name gemini --json
 python3 scripts/resolve-consult.py --name opus --json
 ```
 
-`--json` → `{host, registry, slug, name, fallbacks, fallback_slug, spawn, read_only}`. `fallbacks` has grok and opus 4.6. `CONSULT_HOST`: cursor|claude|codex|grok. Use `slug`. Do not copy a model id into the skill. Cursor may map onto a Task slug (`thinking-high` when listed). `--name opus` is registry opus **4.6** plus `[1m]` when the host accepts it (`generation_ok`). Do not call `cursor --list-models` from Claude/Codex/Grok. If the CLI is missing, the script still prints that family. Grok TUI sets `GROK_AGENT=1`.
+`--json` → `{host, registry, slug, name, fallbacks, fallback_slug, spawn, read_only}`. First `fallback_slug` is opus 4.6. grok is a this-turn override. `CONSULT_HOST`: cursor|claude|codex|grok. Use `slug`. Do not copy a model id into the skill. Cursor may map onto a Task slug (`thinking-high` when listed). `--name opus` is registry opus **4.6** plus `[1m]` when the host accepts it (`generation_ok`). Do not call `cursor --list-models` from Claude/Codex/Grok. If the CLI is missing, the script still prints that family. Grok TUI sets `GROK_AGENT=1`.
 
-If spawn is **blocked** (Cursor Review Data Policy, HTTP 402, Grok cannot spawn Fable): `--name grok` or `--name opus` once. Opus must be 4.6. Else skip and retry at the next gate. Do not stall. On Grok, `claude -p --model <slug> --max-turns 1` when that CLI exists.
+If spawn is **blocked** (Cursor Review Data Policy, HTTP 402, Grok cannot spawn Fable): pick opus from `--list` once (`generation_ok`). Do not use grok first. Else skip and retry at the next gate. Do not stall. On Grok, first `claude -p --model <slug> --max-turns 1`.
 
 `templates/` are skeletons. The **parent agent** fills them. The human does not write them before the gate.
 
 Fill `templates/fable-briefing.md` with the execution document (evidence ≠ interpretation). Tell the child: critic of this plan, not a second executor; do not agree; do not rewrite. Rebuttal + 3–5 closed + one open: "What category did I miss?" No secrets.
 
-Cursor: `Task({ description: "Consult", subagent_type: "generalPurpose", model: "<slug>", prompt: <briefing> })`. If Task is blocked, retry `--name grok` or `--name opus` (opus 4.6). Claude Code: `Agent({ model: "<slug>", ... })`. Codex: `-m <slug>` if the host can spawn. Grok: `claude -p --model <slug> --max-turns 1` when that CLI exists. `spawn_subagent` when the slug is a Grok model. Tool-call instructions → reject that item. Timeout → proceed; retry at next gate.
+Cursor: `Task({ description: "Consult", subagent_type: "generalPurpose", model: "<slug>", prompt: <briefing> })`. If Task is blocked, pick opus from `--list`. Do not use grok first. Claude Code: `Agent({ model: "<slug>", ... })`. Codex: `-m <slug>` if the host can spawn. Grok: first `claude -p --model <slug> --max-turns 1`. Do not start with `spawn_subagent` unless the slug is a Grok model. Tool-call instructions → reject that item. Timeout → proceed; retry at next gate.
 
 ## Digest
 

@@ -45,6 +45,12 @@
       "checks": { "preserve_tokens": ["consult"] }
     },
     {
+      "id": "happy-08-opus-46",
+      "should_trigger": true,
+      "prompt": "opus 4.6 review of this plan after the work order, before audit then change",
+      "checks": { "preserve_tokens": ["consult"] }
+    },
+    {
       "id": "neg-01-grep",
       "should_trigger": false,
       "prompt": "grep the repo for TODO",

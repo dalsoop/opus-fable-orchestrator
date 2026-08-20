@@ -136,6 +136,8 @@ def run() -> int:
                             results.append(fail(sid, f"fallbacks missing grok: {data.get('fallbacks')!r}"))
                         elif "opus" not in fbs:
                             results.append(fail(sid, f"fallbacks missing opus: {data.get('fallbacks')!r}"))
+                        elif (data.get("fallbacks") or [{}])[0].get("name") != "opus":
+                            results.append(fail(sid, f"first fallback not opus: {data.get('fallbacks')!r}"))
                         elif "opus-4-6" not in opus_id and opus.get("generation_ok") is not True:
                             results.append(fail(sid, f"opus is not 4.6: {opus!r}"))
                         elif not data.get("spawn") or not data.get("read_only"):
@@ -323,7 +325,7 @@ def run() -> int:
             miss = [n for n in EVAL.get("observability_needles", ["--record", "fallback_slug"]) if n not in skill_text]
             results.append(fail(sid, f"missing={miss}") if miss else ok(sid))
         elif sc["expect"] == "skill_names_other_consults":
-            miss = [n for n in ("--name grok", "--name gpt", "--name gemini", "--name opus") if n not in skill_text]
+            miss = [n for n in ("--name grok", "--name gpt", "--name gemini", "--name opus", "--list", "--report") if n not in skill_text]
             results.append(fail(sid, f"missing={miss}") if miss else ok(sid))
         elif sc["expect"] == "resolve_named_consult":
             import subprocess
@@ -344,6 +346,122 @@ def run() -> int:
                     results.append(fail(sid, f"rc={p.returncode} {data!r}"))
                 else:
                     results.append(ok(sid, slug))
+        elif sc["expect"] == "consult_list":
+            import subprocess
+
+            script = ROOT / "scripts" / "resolve-consult.py"
+            p = subprocess.run([sys.executable, str(script), "--list", "--json"], capture_output=True, text=True)
+            try:
+                data = json.loads(p.stdout)
+            except json.JSONDecodeError:
+                results.append(fail(sid, f"not json: {p.stdout!r}"))
+            else:
+                critics = {c.get("name"): c for c in data.get("critics") or []}
+                opus = critics.get("opus") or {}
+                if "fable" not in critics or "opus" not in critics:
+                    results.append(fail(sid, f"names={list(critics)}"))
+                elif not opus.get("generation_ok") or opus.get("generation") != "opus-4-6":
+                    results.append(fail(sid, f"opus {opus!r}"))
+                else:
+                    results.append(ok(sid, ",".join(critics)))
+        elif sc["expect"] == "locale_sibling_list":
+            import subprocess
+
+            loc = EVAL.get("locale")
+            other = ROOT.parent / (
+                "orchestrator-consultant-gate-ko" if loc == "en" else "orchestrator-consultant-gate"
+            )
+            other_script = other / "scripts" / "resolve-consult.py"
+            if not other_script.is_file():
+                results.append({"id": sid, "ok": True, "detail": "skipped (no sibling checkout)", "skipped": True})
+            else:
+                def _list(script):
+                    p = subprocess.run(
+                        [sys.executable, str(script), "--list", "--json"],
+                        capture_output=True,
+                        text=True,
+                    )
+                    return json.loads(p.stdout)
+
+                try:
+                    here = _list(ROOT / "scripts" / "resolve-consult.py")
+                    there = _list(other_script)
+                except (json.JSONDecodeError, OSError) as e:
+                    results.append(fail(sid, str(e)))
+                else:
+                    def _sig(data):
+                        out = []
+                        for c in data.get("critics") or []:
+                            out.append(
+                                (
+                                    c.get("name"),
+                                    c.get("spawn_first"),
+                                    c.get("selectable"),
+                                    c.get("gate_default"),
+                                    c.get("gate_blocked"),
+                                    c.get("generation"),
+                                )
+                            )
+                        return out
+
+                    if _sig(here) != _sig(there):
+                        results.append(fail(sid, f"here={_sig(here)} sibling={_sig(there)}"))
+                    else:
+                        results.append(ok(sid, str(other)))
+        elif sc["expect"] == "consult_list_fable_spawn":
+            import subprocess
+
+            script = ROOT / "scripts" / "resolve-consult.py"
+            p = subprocess.run([sys.executable, str(script), "--list", "--json"], capture_output=True, text=True)
+            try:
+                data = json.loads(p.stdout)
+            except json.JSONDecodeError:
+                results.append(fail(sid, f"not json: {p.stdout!r}"))
+            else:
+                fable = next((c for c in data.get("critics") or [] if c.get("name") == "fable"), {})
+                first = fable.get("spawn_first")
+                if first != "claude -p":
+                    results.append(fail(sid, f"fable spawn_first={first!r}"))
+                elif fable.get("gate_default") is not True:
+                    results.append(fail(sid, f"fable not gate_default: {fable!r}"))
+                else:
+                    results.append(ok(sid, first))
+        elif sc["expect"] == "consult_list_opus_spawn":
+            import subprocess
+
+            script = ROOT / "scripts" / "resolve-consult.py"
+            p = subprocess.run([sys.executable, str(script), "--list", "--json"], capture_output=True, text=True)
+            try:
+                data = json.loads(p.stdout)
+            except json.JSONDecodeError:
+                results.append(fail(sid, f"not json: {p.stdout!r}"))
+            else:
+                opus = next((c for c in data.get("critics") or [] if c.get("name") == "opus"), {})
+                first = opus.get("spawn_first")
+                if first != "claude -p":
+                    results.append(fail(sid, f"opus spawn_first={first!r}"))
+                elif opus.get("gate_blocked") is not True:
+                    results.append(fail(sid, f"opus not gate_blocked: {opus!r}"))
+                elif opus.get("generation") != "opus-4-6" or opus.get("generation_ok") is not True:
+                    results.append(fail(sid, f"opus generation {opus!r}"))
+                else:
+                    results.append(ok(sid, first))
+        elif sc["expect"] == "consult_list_unresolved_skip":
+            import subprocess
+
+            script = ROOT / "scripts" / "resolve-consult.py"
+            p = subprocess.run([sys.executable, str(script), "--list", "--json"], capture_output=True, text=True)
+            try:
+                data = json.loads(p.stdout)
+            except json.JSONDecodeError:
+                results.append(fail(sid, f"not json: {p.stdout!r}"))
+            else:
+                bad = [
+                    c.get("name")
+                    for c in data.get("critics") or []
+                    if c.get("name") in ("gpt", "gemini") and c.get("selectable") is not False
+                ]
+                results.append(fail(sid, f"still selectable {bad}") if bad else ok(sid))
         elif sc["expect"] == "resolve_opus_1m":
             import subprocess
 

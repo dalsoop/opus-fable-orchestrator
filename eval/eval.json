@@ -1,5 +1,6 @@
 {
   "skill": "orchestrator-consultant-gate",
+  "notes": "Gate is python3 eval/run.py. evals/cases.json is trigger fixtures for cases_happy only.",
   "locale": "en",
   "version_file": "VERSION",
   "fable_model_slug": "claude-fable-5",
@@ -29,10 +30,10 @@
   "briefing_sections": ["Raw evidence", "My interpretation", "My conclusion", "Questions"],
   "open_question": "What category did I miss?",
   "timeout_needles": ["Timeout", "retry"],
-  "observability_needles": ["--record", "fallback_slug", "fallbacks", "GROK_AGENT", "spawn_subagent"],
+  "observability_needles": ["--record", "fallback_slug", "fallbacks", "GROK_AGENT", "spawn_subagent", "--list", "--report"],
   "parent_needles": ["Do not switch parent", "Grok", "Codex"],
   "parent_forbidden": [],
-  "critic_needles": ["critic is Fable", "parent agent", "do not agree", "before orchestration", "not ground truth", "If the user writes Korean", "orchestrator-consultant-gate-ko", "Do not translate this skill", "before dispatch", "false confidence", "--name grok", "--name opus", "4.6"],
+  "critic_needles": ["critic is Fable", "parent agent", "do not agree", "before orchestration", "not ground truth", "If the user writes Korean", "orchestrator-consultant-gate-ko", "Do not translate this skill", "before dispatch", "false confidence", "--name grok", "--name opus", "4.6", "before spawn", "usage history", "EVAL_LIVE"],
   "scenarios": [
     { "id": "version-sync", "type": "version", "expect": "VERSION_matches_frontmatter" },
     { "id": "locale-en", "type": "trigger", "expect": "description_has_required_not_forbidden" },
@@ -52,6 +53,11 @@
     { "id": "consult-other-models", "type": "roundtrip", "expect": "skill_names_other_consults" },
     { "id": "resolve-grok", "type": "roundtrip", "expect": "resolve_named_consult" },
     { "id": "resolve-opus-window", "type": "roundtrip", "expect": "resolve_opus_1m" },
+    { "id": "consult-list", "type": "roundtrip", "expect": "consult_list" },
+    { "id": "consult-list-fable-spawn", "type": "roundtrip", "expect": "consult_list_fable_spawn" },
+    { "id": "consult-list-opus-spawn", "type": "roundtrip", "expect": "consult_list_opus_spawn" },
+    { "id": "consult-list-unresolved-skip", "type": "roundtrip", "expect": "consult_list_unresolved_skip" },
+    { "id": "locale-sibling-list", "type": "roundtrip", "expect": "locale_sibling_list" },
     { "id": "observability", "type": "roundtrip", "expect": "skill_mentions_observability" },
     { "id": "fable-is-critic", "type": "roundtrip", "expect": "skill_fable_is_critic" },
     {
