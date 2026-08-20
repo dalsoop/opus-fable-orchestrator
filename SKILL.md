@@ -1,25 +1,26 @@
 ---
 name: orchestrator-consultant-gate
-version: 1.29.0
+version: 1.30.0
 kind: skill
 license: MIT
 compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.29.0"
+  version: "1.30.0"
   locale: en
 description: >-
-  Ask a read-only second opinion on the plan after a work order, before the
-  agent starts a full audit-and-change. The critic is Fable. Use before
-  orchestration, for a performance plan, a missing category, a child prompt
-  that is one line off, orchestrator-consultant-gate, consultant gate, expert
-  consult, fable critic, fable review, opus 4.6, opus review, audit then change,
-  sweep and change, or second opinion. Apply when the user assigns work, especially a
-  full audit then change, or before 10+ file edits from that plan. Skip grep,
-  mechanical edits, clear bugfix. Costs tokens. The consult is not ground truth.
-  Payoff is before dispatch, in the plan and child prompts, not at merge.
-  If the user writes Korean, use orchestrator-consultant-gate-ko; do not run
-  this copy.
+  Claude Code too verbose, answers too long, hard to read, which skill, claude
+  code settings, opus 5 verbose, pin opus 4.6, output style. Also a read-only
+  second opinion on the plan after a work order, before the agent starts a full
+  audit-and-change. The critic is Fable. Use before orchestration, for a
+  performance plan, a missing category, a child prompt that is one line off,
+  orchestrator-consultant-gate, consultant gate, expert consult, fable critic,
+  fable review, opus 4.6, opus review, audit then change, sweep and change, or
+  second opinion. Apply when the user assigns work, especially a full audit then
+  change, or before 10+ file edits from that plan. Skip grep, mechanical edits,
+  clear bugfix. Costs tokens. The consult is not ground truth. Payoff is before
+  dispatch, in the plan and child prompts, not at merge. If the user writes
+  Korean, use orchestrator-consultant-gate-ko; do not run this copy.
 ---
 
 # Orchestrator Consultant Gate
@@ -27,6 +28,19 @@ description: >-
 You write the **execution document** in this session (Grok, Codex, Claude, GPT, …). Do not switch parent.
 
 That document is the plan plus any child prompts you will dispatch. Critic it **before orchestration**. The **default critic is Fable**. Spawn it read-only (no files, no tools). It rebuts. You digest. It does not replace you. Claims are **not ground truth**. Every item needs accept / reject / defer + a reason.
+
+## Claude Code
+
+When the user says answers are too verbose, hard to read, which skill, opus 5 got worse, or pin opus 4.6: this is a **settings** job. Do not write be concise into CLAUDE.md. Latest opus is not the same as 4.6. Analogize domains outside the user's language to that language.
+
+`--install-claude` pins `settings.json` `model` to registry opus 4.6 (`[1m]` when `generation_ok`) and writes `output-styles/consult-gate-brief.md` (`keep-coding-instructions: true`). It sets `outputStyle` only if unset. `--force-output-style` overwrites. `--uninstall-claude` drops this skill's `outputStyle` and the written file. It does not restore a previous model. Grok has no `outputStyle`.
+
+```bash
+python3 scripts/resolve-consult.py --install-claude --json
+python3 scripts/resolve-consult.py --uninstall-claude --json
+```
+
+The payoff is the next Claude Code turn: shorter replies, opus 4.6, analogize. You do not notice it as a CLAUDE.md edit.
 
 ## Gate
 

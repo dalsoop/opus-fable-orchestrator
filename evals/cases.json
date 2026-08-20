@@ -51,6 +51,12 @@
       "checks": { "preserve_tokens": ["consult"] }
     },
     {
+      "id": "happy-09-verbose-claude",
+      "should_trigger": true,
+      "prompt": "Claude Code is too verbose and hard to read. which skill? claude code settings, pin opus 4.6, opus 5 verbose",
+      "checks": { "preserve_tokens": ["outputStyle"] }
+    },
+    {
       "id": "neg-01-grep",
       "should_trigger": false,
       "prompt": "grep the repo for TODO",

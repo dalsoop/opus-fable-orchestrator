@@ -31,6 +31,7 @@ WINDOW_1M = "[1m]"
 HOSTS = ("cursor", "claude", "codex", "grok")
 HOOK_NAME = "block-hand-claude-p.py"
 HOOK_TIMEOUT_S = 3
+STYLE_NAME = "consult-gate-brief"
 STATE = Path(os.environ.get("ORCHESTRATOR_CONSULT_HOME", str(Path.home() / ".orchestrator-consultant-gate")))
 RECEIPT = STATE / "receipts.jsonl"
 LIST_STAMP = STATE / "last-list.json"
@@ -326,6 +327,92 @@ def install_hook(settings: Path, script: Path) -> dict:
     return {"settings": str(settings), "script": str(script), "backup": str(bak) if bak else None}
 
 
+def claude_settings_paths() -> tuple[Path, Path]:
+    settings = Path(
+        os.environ.get("ORCHESTRATOR_CONSULT_HOOK_SETTINGS")
+        or str(Path.home() / ".claude" / "settings.json")
+    )
+    styles = Path(
+        os.environ.get("ORCHESTRATOR_CONSULT_OUTPUT_STYLES")
+        or str(Path.home() / ".claude" / "output-styles")
+    )
+    return settings, styles
+
+
+def style_src() -> Path:
+    return Path(__file__).resolve().parent.parent / "output-styles" / f"{STYLE_NAME}.md"
+
+
+def install_claude(settings: Path, styles_dir: Path, force_style: bool) -> dict:
+    src = style_src()
+    if not src.is_file():
+        print(f"missing {src}", file=sys.stderr)
+        return {"error": "missing style", "settings": str(settings)}
+    styles_dir.mkdir(parents=True, exist_ok=True)
+    dest = styles_dir / f"{STYLE_NAME}.md"
+    dest.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+    settings.parent.mkdir(parents=True, exist_ok=True)
+    bak = None
+    if settings.is_file():
+        data = json.loads(settings.read_text(encoding="utf-8"))
+        bak = settings.with_name(settings.name + ".bak-consult-claude")
+        bak.write_text(settings.read_text(encoding="utf-8"), encoding="utf-8")
+    else:
+        data = {}
+    host = detect_host()
+    rid, slug = resolve("opus", host, allowlist(host))
+    data["model"] = slug
+    prev = data.get("outputStyle")
+    style_set = False
+    if force_style or not prev:
+        data["outputStyle"] = STYLE_NAME
+        style_set = True
+    settings.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    body = dest.read_text(encoding="utf-8")
+    return {
+        "settings": str(settings),
+        "model": slug,
+        "generation": OPUS_GEN,
+        "generation_ok": generation_ok(rid, OPUS_GEN),
+        "outputStyle": data.get("outputStyle"),
+        "outputStyle_set": style_set,
+        "outputStyle_kept": None if style_set else prev,
+        "style_file": str(dest),
+        "keep_coding_instructions": "keep-coding-instructions: true" in body,
+        "claude_md_written": False,
+        "env_opus": os.environ.get("ANTHROPIC_DEFAULT_OPUS_MODEL"),
+        "backup": str(bak) if bak else None,
+    }
+
+
+def uninstall_claude(settings: Path, styles_dir: Path) -> dict:
+    dest = styles_dir / f"{STYLE_NAME}.md"
+    removed_file = False
+    if dest.is_file():
+        dest.unlink()
+        removed_file = True
+    if not settings.is_file():
+        return {
+            "settings": str(settings),
+            "removed_style_file": removed_file,
+            "outputStyle_removed": False,
+            "model_unchanged": True,
+        }
+    data = json.loads(settings.read_text(encoding="utf-8"))
+    style_removed = False
+    if data.get("outputStyle") == STYLE_NAME:
+        data.pop("outputStyle", None)
+        style_removed = True
+        settings.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return {
+        "settings": str(settings),
+        "removed_style_file": removed_file,
+        "outputStyle_removed": style_removed,
+        "model_unchanged": True,
+        "model": data.get("model"),
+    }
+
+
 def uninstall_hook(settings: Path) -> dict:
     if not settings.is_file():
         return {"settings": str(settings), "removed": 0}
@@ -492,7 +579,24 @@ def main() -> int:
     ap.add_argument("--spawn-line", default="", help="exact --print-spawn stdout; required with --record")
     ap.add_argument("--install-hook", action="store_true", help="wire Claude Code PreToolUse(Bash); Grok has none")
     ap.add_argument("--uninstall-hook", action="store_true", help="remove the PreToolUse(Bash) consult hook")
+    ap.add_argument("--install-claude", action="store_true", help="pin opus 4.6 + write outputStyle; not CLAUDE.md")
+    ap.add_argument("--uninstall-claude", action="store_true", help="drop this skill's outputStyle and style file")
+    ap.add_argument("--force-output-style", action="store_true", help="overwrite an existing outputStyle")
     args = ap.parse_args()
+    if args.install_claude or args.uninstall_claude:
+        settings, styles = claude_settings_paths()
+        out = (
+            install_claude(settings, styles, args.force_output_style)
+            if args.install_claude
+            else uninstall_claude(settings, styles)
+        )
+        if out.get("error"):
+            return 2
+        if args.json:
+            print(json.dumps(out))
+        else:
+            print(out["settings"])
+        return 0
     if args.install_hook or args.uninstall_hook:
         settings = Path(
             os.environ.get("ORCHESTRATOR_CONSULT_HOOK_SETTINGS")

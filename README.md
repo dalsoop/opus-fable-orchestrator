@@ -1,11 +1,12 @@
 # orchestrator-consultant-gate
 
-Before orchestration, critic the execution document (the plan and any child prompts) with read-only Fable. The session agent does not switch. The consult costs tokens and is not ground truth.
+Claude Code replies that are too long are a **settings** job (`--install-claude`: pin opus 4.6 + `outputStyle`). Do not paste "be concise" into CLAUDE.md. Before orchestration, critic the execution document (the plan and any child prompts) with read-only Fable. The session agent does not switch. The consult costs tokens and is not ground truth.
 
 English (`main`). Korean: branch [`ko`](https://github.com/dalsoop/orchestrator-consultant-gate/tree/ko).
 
 ```bash
 npx skills add dalsoop/orchestrator-consultant-gate -g -y
+python3 scripts/resolve-consult.py --install-claude --json
 python3 scripts/resolve-consult.py --list --json
 python3 scripts/resolve-consult.py --exec-spawn --briefing templates/fable-briefing.md
 python3 scripts/resolve-consult.py --print-spawn
@@ -25,7 +26,7 @@ Korean: `npx skills add dalsoop/orchestrator-consultant-gate@ko -g -y`
 
 One AI writes the **execution document** from the work order. **GATE** before orchestration and before audit-then-change. Fable **rebuts** it read-only: one more missed bottleneck, a hole in a child prompt, an omitted category. Notes go back. Same session. The payoff is **before dispatch**, in that document, not at merge. Claims are probabilistic. Digest them. Do not treat them as answers.
 
-Pick the critic from `--list`. Default is Fable (`agent-model-registry get fable`). Spawn the `slug` from `--json`. If Fable is blocked, pick opus 4.6 from the list, not grok. `--report` is usage history, not critic quality. Grok: `--exec-spawn --briefing` after `--list`; Grok has no PreToolUse. Claude Code: `--install-hook`. Default eval is static; `EVAL_LIVE=1` only when asked. Hosts: Cursor, Claude Code, Codex, Grok TUI (`GROK_AGENT=1`). The session agent fills `templates/` at the gate.
+Claude Code verbosity: `--install-claude` (opus 4.6 + `consult-gate-brief`, `keep-coding-instructions`). `--install-hook` is PreToolUse. Pick the critic from `--list`. Default is Fable (`agent-model-registry get fable`). Spawn the `slug` from `--json`. If Fable is blocked, pick opus 4.6 from the list, not grok. `--report` is usage history, not critic quality. Grok: `--exec-spawn --briefing` after `--list`; Grok has no PreToolUse. Default eval is static; `EVAL_LIVE=1` only when asked. Hosts: Cursor, Claude Code, Codex, Grok TUI (`GROK_AGENT=1`). The session agent fills `templates/` at the gate.
 
 [`SKILL.md`](SKILL.md) · [`templates/`](templates/) · [`scripts/`](scripts/) · [`eval/`](eval/) · MIT
 
