@@ -462,6 +462,166 @@ def run() -> int:
                     if c.get("name") in ("gpt", "gemini") and c.get("selectable") is not False
                 ]
                 results.append(fail(sid, f"still selectable {bad}") if bad else ok(sid))
+        elif sc["expect"] == "record_requires_list":
+            import subprocess
+            import tempfile
+
+            script = ROOT / "scripts" / "resolve-consult.py"
+            with tempfile.TemporaryDirectory() as tmp:
+                env = {**os.environ, "ORCHESTRATOR_CONSULT_HOME": tmp}
+                denied = subprocess.run(
+                    [sys.executable, str(script), "--record", "--ok", "--read-only"],
+                    capture_output=True,
+                    text=True,
+                    env=env,
+                )
+                if denied.returncode != 2:
+                    results.append(fail(sid, f"no-list rc={denied.returncode} {denied.stderr[-400:]}"))
+                else:
+                    listed = subprocess.run(
+                        [sys.executable, str(script), "--list", "--json"],
+                        capture_output=True,
+                        text=True,
+                        env=env,
+                    )
+                    ok_rec = subprocess.run(
+                        [sys.executable, str(script), "--record", "--ok", "--read-only"],
+                        capture_output=True,
+                        text=True,
+                        env=env,
+                    )
+                    if listed.returncode != 0 or ok_rec.returncode != 0:
+                        results.append(fail(sid, f"list+record rc list={listed.returncode} rec={ok_rec.returncode}"))
+                    else:
+                        results.append(ok(sid, "exit 2 then 0"))
+        elif sc["expect"] == "print_spawn_requires_list":
+            import subprocess
+            import tempfile
+
+            script = ROOT / "scripts" / "resolve-consult.py"
+            with tempfile.TemporaryDirectory() as tmp:
+                env = {**os.environ, "ORCHESTRATOR_CONSULT_HOME": tmp, "CONSULT_SESSION": "eval-print-spawn"}
+                denied = subprocess.run(
+                    [sys.executable, str(script), "--print-spawn"],
+                    capture_output=True,
+                    text=True,
+                    env=env,
+                )
+                if denied.returncode != 2:
+                    results.append(fail(sid, f"no-list rc={denied.returncode} {denied.stderr[-400:]}"))
+                else:
+                    listed = subprocess.run(
+                        [sys.executable, str(script), "--list", "--json"],
+                        capture_output=True,
+                        text=True,
+                        env=env,
+                    )
+                    printed = subprocess.run(
+                        [sys.executable, str(script), "--print-spawn"],
+                        capture_output=True,
+                        text=True,
+                        env=env,
+                    )
+                    line = (printed.stdout or "").strip()
+                    grok_named = subprocess.run(
+                        [sys.executable, str(script), "--name", "grok", "--print-spawn"],
+                        capture_output=True,
+                        text=True,
+                        env=env,
+                    )
+                    if listed.returncode != 0 or printed.returncode != 0:
+                        results.append(fail(sid, f"list+print rc list={listed.returncode} print={printed.returncode}"))
+                    elif not line.startswith("claude -p --model ") or "--max-turns 1" not in line:
+                        results.append(fail(sid, f"bad spawn line {line!r}"))
+                    elif grok_named.returncode != 2:
+                        results.append(fail(sid, f"grok print-spawn rc={grok_named.returncode}"))
+                    else:
+                        results.append(ok(sid, line))
+        elif sc["expect"] == "list_stamp_session":
+            import subprocess
+            import tempfile
+
+            script = ROOT / "scripts" / "resolve-consult.py"
+            with tempfile.TemporaryDirectory() as tmp:
+                env_a = {**os.environ, "ORCHESTRATOR_CONSULT_HOME": tmp, "CONSULT_SESSION": "sess-a"}
+                env_b = {**os.environ, "ORCHESTRATOR_CONSULT_HOME": tmp, "CONSULT_SESSION": "sess-b"}
+                listed = subprocess.run(
+                    [sys.executable, str(script), "--list", "--json"],
+                    capture_output=True,
+                    text=True,
+                    env=env_a,
+                )
+                other = subprocess.run(
+                    [sys.executable, str(script), "--print-spawn"],
+                    capture_output=True,
+                    text=True,
+                    env=env_b,
+                )
+                same = subprocess.run(
+                    [sys.executable, str(script), "--print-spawn"],
+                    capture_output=True,
+                    text=True,
+                    env=env_a,
+                )
+                if listed.returncode != 0:
+                    results.append(fail(sid, f"list rc={listed.returncode}"))
+                elif other.returncode != 2:
+                    results.append(fail(sid, f"other session rc={other.returncode}"))
+                elif same.returncode != 0:
+                    results.append(fail(sid, f"same session rc={same.returncode} {same.stderr[-400:]}"))
+                else:
+                    results.append(ok(sid, "other=2 same=0"))
+        elif sc["expect"] == "list_stamp_stale":
+            import json as _json
+            import subprocess
+            import tempfile
+            from pathlib import Path as _Path
+
+            script = ROOT / "scripts" / "resolve-consult.py"
+            with tempfile.TemporaryDirectory() as tmp:
+                env = {**os.environ, "ORCHESTRATOR_CONSULT_HOME": tmp, "CONSULT_SESSION": "eval-stale"}
+                listed = subprocess.run(
+                    [sys.executable, str(script), "--list", "--json"],
+                    capture_output=True,
+                    text=True,
+                    env=env,
+                )
+                stamp_path = _Path(tmp) / "last-list.json"
+                try:
+                    stamp = _json.loads(stamp_path.read_text(encoding="utf-8"))
+                except (OSError, _json.JSONDecodeError) as e:
+                    results.append(fail(sid, f"stamp {e}"))
+                else:
+                    stamp["ts"] = "2020-01-01T00:00:00Z"
+                    stamp_path.write_text(_json.dumps(stamp), encoding="utf-8")
+                    stale = subprocess.run(
+                        [sys.executable, str(script), "--print-spawn"],
+                        capture_output=True,
+                        text=True,
+                        env=env,
+                    )
+                    stale_rec = subprocess.run(
+                        [sys.executable, str(script), "--record", "--ok", "--read-only"],
+                        capture_output=True,
+                        text=True,
+                        env=env,
+                    )
+                    if listed.returncode != 0:
+                        results.append(fail(sid, f"list rc={listed.returncode}"))
+                    elif stale.returncode != 2 or stale_rec.returncode != 2:
+                        results.append(
+                            fail(sid, f"stale print={stale.returncode} record={stale_rec.returncode}")
+                        )
+                    else:
+                        results.append(ok(sid, "stale exit 2"))
+        elif sc["expect"] == "eval_live_gated":
+            src = (ROOT / "eval" / "run.py").read_text(encoding="utf-8")
+            if 'sc.get("harness") == "live" and not live' not in src:
+                results.append(fail(sid, "live harness not gated on EVAL_LIVE"))
+            elif "EVAL_LIVE" not in src:
+                results.append(fail(sid, "EVAL_LIVE missing"))
+            else:
+                results.append(ok(sid))
         elif sc["expect"] == "resolve_opus_1m":
             import subprocess
 
