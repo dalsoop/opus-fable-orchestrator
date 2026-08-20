@@ -11,9 +11,11 @@
     "second opinion",
     "audit then change",
     "work order",
-    "fable review"
+    "fable review",
+    "opus 4.6",
+    "opus review"
   ],
-  "override_needles": ["resolve-consult.py", "claude-fable-5"],
+  "override_needles": ["resolve-consult.py", "--name opus"],
   "triggers_forbidden": [
     "fable 자문",
     "전문가 의견",
@@ -27,10 +29,10 @@
   "briefing_sections": ["Raw evidence", "My interpretation", "My conclusion", "Questions"],
   "open_question": "What category did I miss?",
   "timeout_needles": ["Timeout", "retry"],
-  "observability_needles": ["--record", "fallback_slug", "GROK_AGENT", "spawn_subagent"],
+  "observability_needles": ["--record", "fallback_slug", "fallbacks", "GROK_AGENT", "spawn_subagent"],
   "parent_needles": ["Do not switch parent", "Grok", "Codex"],
   "parent_forbidden": [],
-  "critic_needles": ["The critic is Fable", "parent agent", "do not agree", "before orchestration", "not ground truth", "If the user writes Korean", "orchestrator-consultant-gate-ko", "Do not translate this skill", "before dispatch", "false confidence"],
+  "critic_needles": ["critic is Fable", "parent agent", "do not agree", "before orchestration", "not ground truth", "If the user writes Korean", "orchestrator-consultant-gate-ko", "Do not translate this skill", "before dispatch", "false confidence", "--name grok", "--name opus", "4.6"],
   "scenarios": [
     { "id": "version-sync", "type": "version", "expect": "VERSION_matches_frontmatter" },
     { "id": "locale-en", "type": "trigger", "expect": "description_has_required_not_forbidden" },

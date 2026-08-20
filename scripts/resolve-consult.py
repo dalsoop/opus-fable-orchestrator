@@ -6,7 +6,7 @@ Host: CONSULT_HOST, else this session (CURSOR_AGENT / CLAUDECODE / Codex / GROK_
 Cursor Task slugs are used only when the host is Cursor. Never treat a
 random `agent` binary on PATH as Cursor.
 
-Default JSON includes `fallback_name` / `fallback_slug` (grok) and `spawn`.
+Default JSON includes `fallbacks` (grok and opus 4.6) plus legacy `fallback_slug`.
 `--record` appends one line to ~/.orchestrator-consultant-gate/receipts.jsonl.
 """
 
@@ -22,7 +22,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 FAMILY = "claude-fable-5"
-FALLBACK_NAME = "grok"
+FALLBACK_NAMES = ("grok", "opus")
+OPUS_GEN = "opus-4-6"
 WINDOW_1M = "[1m]"
 HOSTS = ("cursor", "claude", "codex", "grok")
 RECEIPT = Path.home() / ".orchestrator-consultant-gate" / "receipts.jsonl"
@@ -120,6 +121,12 @@ def with_1m(base: str) -> str:
     return f"{base}{WINDOW_1M}"
 
 
+def generation_ok(rid: str | None, gen: str) -> bool:
+    if not rid:
+        return False
+    return gen in rid.lower().replace(".", "-")
+
+
 def map_same_family(rid: str, allow: list[str]) -> str | None:
     """Keep the registry family. Do not remap opus-4-6 onto opus-5."""
     if not allow:
@@ -149,17 +156,28 @@ def resolve(name: str, host: str, allow: list[str]) -> tuple[str | None, str]:
 
 
 def spawn_hint(host: str, slug: str) -> dict[str, str]:
+    cursor = (
+        f'Task({{ description: "Consult", subagent_type: "generalPurpose", '
+        f'model: "{slug}", prompt: <briefing> }}). '
+        f'If Task is blocked, retry `--name grok` or `--name opus` (opus 4.6).'
+    )
+    if slug.startswith("claude-") or "fable" in slug.lower():
+        grok = (
+            f'`claude -p --model {slug} --max-turns 1` when Claude CLI exists. '
+            f'spawn_subagent when the slug is a Grok model. '
+            f'Blocked → `--name grok` or `--name opus` (opus 4.6).'
+        )
+    else:
+        grok = (
+            "spawn_subagent when the slug is a Grok model. "
+            "Otherwise `--name grok` or `--name opus` (opus 4.6) and spawn that slug."
+        )
     return {
         "read_only": "no files, no tools; critic, not a second executor",
-        "cursor": f'Task({{ description: "Consult", subagent_type: "generalPurpose", model: "{slug}", prompt: <briefing> }})',
+        "cursor": cursor,
         "claude": f'Agent({{ model: "{slug}", prompt: <briefing> }})',
         "codex": f"-m {slug}",
-        "grok": (
-            f'spawn_subagent({{ description: "Consult", subagent_type: "general-purpose", '
-            f'model: "{slug}", prompt: <briefing> }}). '
-            f'If the host cannot spawn that slug, blocked → fallback_slug. '
-            f'`claude -p --model {slug} --max-turns 1` when Claude CLI can run the critic.'
-        ),
+        "grok": grok,
         "host": host,
     }
 
@@ -176,11 +194,28 @@ def payload(name: str, host: str, allow: list[str]) -> dict:
         "read_only": True,
         "spawn": spawn_hint(host, slug),
     }
-    if name.lower() != FALLBACK_NAME:
-        frid, fslug = resolve(FALLBACK_NAME, host, allow)
-        out["fallback_name"] = FALLBACK_NAME
-        out["fallback_registry"] = frid
-        out["fallback_slug"] = fslug
+    fallbacks = []
+    for n in FALLBACK_NAMES:
+        if n == name.lower():
+            continue
+        frid, fslug = resolve(n, host, allow)
+        item: dict = {"name": n, "registry": frid, "slug": fslug}
+        if n == "opus":
+            item["generation"] = OPUS_GEN
+            item["generation_ok"] = generation_ok(frid, OPUS_GEN)
+        fallbacks.append(item)
+    out["fallbacks"] = fallbacks
+    if fallbacks:
+        first = fallbacks[0]
+        out["fallback_name"] = first["name"]
+        out["fallback_registry"] = first["registry"]
+        out["fallback_slug"] = first["slug"]
+        if first["name"] == "opus":
+            out["fallback_generation"] = first.get("generation")
+            out["fallback_generation_ok"] = first.get("generation_ok")
+    if name.lower() == "opus":
+        out["generation"] = OPUS_GEN
+        out["generation_ok"] = generation_ok(rid, OPUS_GEN)
     return out
 
 
