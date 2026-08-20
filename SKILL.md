@@ -1,26 +1,27 @@
 ---
 name: orchestrator-consultant-gate
-version: 1.32.1
+version: 1.33.0
 kind: skill
 license: MIT
 compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.32.1"
+  version: "1.33.0"
   locale: en
 description: >-
-  Claude Code too verbose, answers too long, hard to read, which skill, claude
-  code settings, opus 5 verbose, pin opus 4.6, output style. Also a read-only
-  second opinion on the plan after a work order, before the agent starts a full
-  audit-and-change. The critic is Fable. Use before orchestration, for a
-  performance plan, a missing category, a child prompt that is one line off,
-  orchestrator-consultant-gate, consultant gate, expert consult, fable critic,
-  fable review, opus 4.6, opus review, audit then change, sweep and change, or
-  second opinion. Apply when the user assigns work, especially a full audit then
-  change, or before 10+ file edits from that plan. Skip grep, mechanical edits,
-  clear bugfix. Costs tokens. The consult is not ground truth. Payoff is before
-  dispatch, in the plan and child prompts, not at merge. If the user writes
-  Korean, use orchestrator-consultant-gate-ko; do not run this copy.
+  Claude Code wrong answers, mistakes, harder language, analogize, which skill,
+  claude code settings, opus 5 worse, pin opus 4.6, too verbose, hard to read,
+  output style. Also a read-only second opinion on the plan after a work order,
+  before the agent starts a full audit-and-change. The critic is Fable. Use
+  before orchestration, for a performance plan, a missing category, a child
+  prompt that is one line off, orchestrator-consultant-gate, consultant gate,
+  expert consult, fable critic, fable review, opus 4.6, opus review, audit then
+  change, sweep and change, or second opinion. Apply when the user assigns
+  work, especially a full audit then change, or before 10+ file edits from that
+  plan. Skip grep, mechanical edits, clear bugfix. Costs tokens. The consult is
+  not ground truth. Payoff is before dispatch, in the plan and child prompts,
+  not at merge. If the user writes Korean, use
+  orchestrator-consultant-gate-ko; do not run this copy.
 ---
 
 # Orchestrator Consultant Gate
@@ -31,7 +32,7 @@ That document is the plan plus any child prompts you will dispatch. Critic it **
 
 ## Claude Code
 
-When the user says answers are too verbose, hard to read, which skill, opus 5 got worse, or pin opus 4.6: this is a **settings** job. Do not write be concise into CLAUDE.md. Latest opus is not the same as 4.6. Analogize domains outside the user's language to that language.
+When the user says wrong answers, mistakes, harder language, analogize, which skill, opus 5 got worse, or pin opus 4.6: this is a **settings** job. Spoken “too verbose” is the same door. Do not write be concise into CLAUDE.md. Latest opus is not the same as 4.6. Pin 4.6 because later opus invents more in a specialist's domain. Analogize domains outside the user's language to that language. Character count is not the success metric.
 
 `--install-claude` pins `settings.json` `model` to registry opus 4.6 (`[1m]` when `generation_ok`) and writes `env.ANTHROPIC_DEFAULT_OPUS_MODEL` to that generation so `/model opus` does not jump later. It writes `output-styles/consult-gate-brief.md` (`keep-coding-instructions: true`). It sets `outputStyle` only if unset. `--force-output-style` overwrites. `pin_effective` follows the written settings env, not the current process env. `--uninstall-claude` restores the previous `model`, `outputStyle`, and env key from the sidecar and deletes the written file. Grok has no `outputStyle`. Do not edit the shell.
 
@@ -40,7 +41,7 @@ python3 scripts/resolve-consult.py --install-claude --json
 python3 scripts/resolve-consult.py --uninstall-claude --json
 ```
 
-The payoff is the next Claude Code turn: shorter replies, opus 4.6, analogize. You do not notice it as a CLAUDE.md edit.
+The payoff is the next Claude Code turn: opus 4.6, analogize. Do not invent. You do not notice it as a CLAUDE.md edit or a shorter word count.
 
 ## Gate
 

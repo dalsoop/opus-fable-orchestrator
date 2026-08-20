@@ -53,7 +53,7 @@
     {
       "id": "happy-09-verbose-claude",
       "should_trigger": true,
-      "prompt": "Claude Code is too verbose and hard to read. which skill? claude code settings, pin opus 4.6, opus 5 verbose",
+      "prompt": "Claude Code wrong answers and mistakes, harder language. which skill? claude code settings, pin opus 4.6, analogize, opus 5 worse, too verbose",
       "checks": { "preserve_tokens": ["outputStyle"] }
     },
     {
