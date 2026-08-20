@@ -1,12 +1,12 @@
 ---
 name: orchestrator-consultant-gate
-version: 1.32.0
+version: 1.32.1
 kind: skill
 license: MIT
 compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.32.0"
+  version: "1.32.1"
   locale: en
 description: >-
   Claude Code too verbose, answers too long, hard to read, which skill, claude
