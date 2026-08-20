@@ -690,7 +690,16 @@ def run() -> int:
                     if replay.returncode != 2:
                         results.append(fail(sid, f"replay rc={replay.returncode}"))
                     else:
-                        results.append(ok(sid, "missing/wrong/replay=2 match=0"))
+                        reprint = subprocess.run(
+                            [sys.executable, str(script), "--print-spawn"],
+                            capture_output=True,
+                            text=True,
+                            env=env,
+                        )
+                        if reprint.returncode != 2:
+                            results.append(fail(sid, f"print-spawn after record rc={reprint.returncode}"))
+                        else:
+                            results.append(ok(sid, "missing/wrong/replay/reprint=2 match=0"))
         elif sc["expect"] == "locale_shared_procedure":
             needles = EVAL.get("locale_shared_needles") or []
             loc = EVAL.get("locale")
@@ -741,6 +750,28 @@ def run() -> int:
                     results.append(fail(sid, f"here={here_pos} sibling={there_pos}"))
                 else:
                     results.append(ok(sid, ",".join(order)))
+        elif sc["expect"] == "locale_flag_sequence":
+            loc = EVAL.get("locale")
+            other = ROOT.parent / (
+                "orchestrator-consultant-gate-ko" if loc == "en" else "orchestrator-consultant-gate"
+            )
+
+            def _uniq_flags(text: str) -> list[str]:
+                out: list[str] = []
+                for flag in re.findall(r"`(--[a-z0-9-]+)`", text):
+                    if flag not in out:
+                        out.append(flag)
+                return out
+
+            if not (other / "SKILL.md").is_file():
+                results.append({"id": sid, "ok": True, "detail": "skipped (no sibling checkout)", "skipped": True})
+            else:
+                here_f = _uniq_flags(skill_text)
+                there_f = _uniq_flags((other / "SKILL.md").read_text(encoding="utf-8"))
+                if here_f != there_f:
+                    results.append(fail(sid, f"here={here_f} sibling={there_f}"))
+                else:
+                    results.append(ok(sid, ",".join(here_f)))
         elif sc["expect"] == "sibling_script_same":
             import hashlib
 
