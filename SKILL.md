@@ -1,12 +1,12 @@
 ---
 name: orchestrator-consultant-gate
-version: 1.15.0
+version: 1.16.0
 kind: skill
 license: MIT
 compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.15.0"
+  version: "1.16.0"
   locale: en
 description: >-
   Ask a read-only second opinion on the plan after a work order, before the
@@ -14,10 +14,12 @@ description: >-
   orchestration, for a performance plan, a missing category, a child prompt
   that is one line off, orchestrator-consultant-gate, consultant gate, expert
   consult, fable critic, fable review, audit then change, sweep and change, or
-  second opinion. Also when the user says 페이블 검수받아봐, 페이블로 검수해봐,
-  페이블 검수, or 페이블로 검수. Apply when the user assigns work, especially a
+  second opinion. Apply when the user assigns work, especially a
   full audit then change, or before 10+ file edits from that plan. Skip grep,
   mechanical edits, clear bugfix. Costs tokens. The consult is not ground truth.
+  Payoff is before dispatch, in the plan and child prompts, not at merge.
+  If the user writes Korean, use orchestrator-consultant-gate-ko; do not run
+  this copy.
 ---
 
 # Orchestrator Consultant Gate
@@ -30,7 +32,9 @@ The consult costs tokens. Its claims are abstract and probabilistic. They are **
 
 ## Gate
 
-**Must** after a **work order**, **before orchestration**. Also before the planned **audit-then-change**. Not later at merge. Same gate if the user says 페이블 검수받아봐, 페이블로 검수해봐, 페이블 검수, or fable review.
+**Must** after a **work order**, **before orchestration**. Also before the planned **audit-then-change**. Not later at merge. Same gate if the user says fable review.
+
+**Locale.** This copy is English. If the user writes Korean, **do not run this copy**. Follow `orchestrator-consultant-gate-ko` (`npx skills add dalsoop/orchestrator-consultant-gate@ko -g -y` if missing). Do not translate this skill and continue.
 
 **Must** for a performance plan (name one missed bottleneck), an orchestration with child prompts (one off prompt wrecks the batch; fill holes), or an execution document that can omit a category.
 
@@ -39,6 +43,14 @@ The consult costs tokens. Its claims are abstract and probabilistic. They are **
 **Must not:** `grep` / file reads, mechanical edits, clear bugfix. Not every turn. Skip when the token cost is not worth it. ≤500 words.
 
 The artifact is the **execution document**, not a code review and not a second executor.
+
+## Effect
+
+The payoff is **before dispatch**, in the execution document you edit after digest. You notice it as one extra bottleneck named, a hole filled in a child prompt, or a missing category added. You do not notice it as a higher score, a merge gate, or a second agent doing the work.
+
+A child spawn costs tokens. The reply is probabilistic. If you accept every item, you paid tokens for false confidence. Skip when the plan is grep, a typo, or one clear bug.
+
+If spawn is blocked, fallback once or skip. A skipped gate has no effect. A gate after children already ran has no effect.
 
 ## Check
 

@@ -19,7 +19,7 @@ Korean: `npx skills add dalsoop/orchestrator-consultant-gate@ko -g -y`
   <img src="assets/how-the-gate-works-en.png" alt="One AI writes the plan. Another AI reviews it." width="920">
 </p>
 
-One AI writes the **execution document** from the work order. **GATE** before orchestration and before audit-then-change. Fable **rebuts** it read-only: one more missed bottleneck, a hole in a child prompt, an omitted category. Notes go back. Same session. Claims are probabilistic. Digest them. Do not treat them as answers.
+One AI writes the **execution document** from the work order. **GATE** before orchestration and before audit-then-change. Fable **rebuts** it read-only: one more missed bottleneck, a hole in a child prompt, an omitted category. Notes go back. Same session. The payoff is **before dispatch**, in that document, not at merge. Claims are probabilistic. Digest them. Do not treat them as answers.
 
 The critic is Fable (`fable` → `claude-fable-5`). This turn, override with `--name grok`, `--name gpt`, or `--name gemini`. Blocked spawn → `fallback_slug` in the same `--json`. Hosts: Cursor, Claude Code, Codex, Grok TUI (`GROK_AGENT=1`). The session agent fills `templates/` at the gate.
 
