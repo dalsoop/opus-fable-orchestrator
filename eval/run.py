@@ -1053,7 +1053,13 @@ def run() -> int:
                 }
                 env.pop("ANTHROPIC_DEFAULT_OPUS_MODEL", None)
                 settings.write_text(
-                    json.dumps({"model": "keep-me", "outputStyle": "fluent-korean"}),
+                    json.dumps(
+                        {
+                            "model": "keep-me",
+                            "outputStyle": "fluent-korean",
+                            "env": {"ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-8"},
+                        }
+                    ),
                     encoding="utf-8",
                 )
                 installed = subprocess.run(
@@ -1080,6 +1086,8 @@ def run() -> int:
                         results.append(fail(sid, f"kept style {data.get('outputStyle')!r}"))
                     elif report.get("pin_effective") is not True:
                         results.append(fail(sid, f"pin_effective {report.get('pin_effective')!r}"))
+                    elif (data.get("env") or {}).get("ANTHROPIC_DEFAULT_OPUS_MODEL") != "claude-opus-4-6":
+                        results.append(fail(sid, f"env {data.get('env')!r}"))
                     elif not style_path.is_file() or "keep-coding-instructions: true" not in style_path.read_text(
                         encoding="utf-8"
                     ):
@@ -1121,7 +1129,7 @@ def run() -> int:
                             cwd=str(ROOT),
                         )
                         after_un = json.loads(settings.read_text(encoding="utf-8"))
-                        if late.returncode != 0 or late_report.get("pin_effective") is not False:
+                        if late.returncode != 0 or late_report.get("pin_effective") is not True:
                             results.append(fail(sid, f"late pin {late.returncode} {late_report}"))
                         elif forced.returncode != 0 or after_force.get("outputStyle") != "consult-gate-brief":
                             results.append(fail(sid, f"force {after_force}"))
@@ -1129,10 +1137,12 @@ def run() -> int:
                             results.append(fail(sid, f"uninstall style {after_un}"))
                         elif after_un.get("model") != "keep-me":
                             results.append(fail(sid, f"uninstalled model {after_un.get('model')!r}"))
+                        elif (after_un.get("env") or {}).get("ANTHROPIC_DEFAULT_OPUS_MODEL") != "claude-opus-4-8":
+                            results.append(fail(sid, f"uninstalled env {after_un.get('env')!r}"))
                         elif (styles / "consult-gate-brief.md").is_file():
                             results.append(fail(sid, "style file left after uninstall"))
                         else:
-                            results.append(ok(sid, "pin 4.6; pin_effective; restore; no CLAUDE.md"))
+                            results.append(ok(sid, "pin 4.6 env; pin_effective; restore; no CLAUDE.md"))
         elif sc["expect"] == "resolve_opus_1m":
             import subprocess
 

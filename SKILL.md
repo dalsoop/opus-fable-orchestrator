@@ -1,12 +1,12 @@
 ---
 name: orchestrator-consultant-gate
-version: 1.31.0
+version: 1.32.0
 kind: skill
 license: MIT
 compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.31.0"
+  version: "1.32.0"
   locale: en
 description: >-
   Claude Code too verbose, answers too long, hard to read, which skill, claude
@@ -33,7 +33,7 @@ That document is the plan plus any child prompts you will dispatch. Critic it **
 
 When the user says answers are too verbose, hard to read, which skill, opus 5 got worse, or pin opus 4.6: this is a **settings** job. Do not write be concise into CLAUDE.md. Latest opus is not the same as 4.6. Analogize domains outside the user's language to that language.
 
-`--install-claude` pins `settings.json` `model` to registry opus 4.6 (`[1m]` when `generation_ok`) and writes `output-styles/consult-gate-brief.md` (`keep-coding-instructions: true`). It sets `outputStyle` only if unset. `--force-output-style` overwrites. Report `pin_effective`. If `ANTHROPIC_DEFAULT_OPUS_MODEL` names a later generation, `pin_effective` is false. Files still write. `--uninstall-claude` restores the previous `model` and `outputStyle` from the sidecar and deletes the written file. Grok has no `outputStyle`.
+`--install-claude` pins `settings.json` `model` to registry opus 4.6 (`[1m]` when `generation_ok`) and writes `env.ANTHROPIC_DEFAULT_OPUS_MODEL` to that generation so `/model opus` does not jump later. It writes `output-styles/consult-gate-brief.md` (`keep-coding-instructions: true`). It sets `outputStyle` only if unset. `--force-output-style` overwrites. `pin_effective` follows the written settings env, not the current process env. `--uninstall-claude` restores the previous `model`, `outputStyle`, and env key from the sidecar and deletes the written file. Grok has no `outputStyle`. Do not edit the shell.
 
 ```bash
 python3 scripts/resolve-consult.py --install-claude --json
