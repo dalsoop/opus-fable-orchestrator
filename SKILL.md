@@ -1,12 +1,12 @@
 ---
 name: orchestrator-consultant-gate
-version: 1.28.0
+version: 1.29.0
 kind: skill
 license: MIT
 compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.28.0"
+  version: "1.29.0"
   locale: en
 description: >-
   Ask a read-only second opinion on the plan after a work order, before the

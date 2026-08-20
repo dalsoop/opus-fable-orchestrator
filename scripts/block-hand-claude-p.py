@@ -17,6 +17,13 @@ PRINT_FLAG = re.compile(
 WRAPPER = "resolve-consult.py"
 
 
+def command_body(cmd: str) -> str:
+    lines = []
+    for line in cmd.splitlines():
+        lines.append(line.split("#", 1)[0])
+    return " ".join(lines)
+
+
 def decide(payload: dict) -> str | None:
     tool = payload.get("tool_name") or ""
     if tool and tool != "Bash":
@@ -25,7 +32,7 @@ def decide(payload: dict) -> str | None:
     if not isinstance(inp, dict):
         inp = {}
     cmd = inp.get("command") or payload.get("command") or ""
-    if not isinstance(cmd, str) or WRAPPER in cmd:
+    if not isinstance(cmd, str) or WRAPPER in command_body(cmd):
         return None
     if PRINT_FLAG.search(cmd):
         return (
