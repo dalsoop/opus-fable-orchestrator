@@ -1,24 +1,25 @@
 ---
 name: orchestrator-consultant-gate-ko
-version: 1.29.0
+version: 1.30.0
 kind: skill
 license: MIT
 compatibility: 읽기 전용 하위 에이전트를 띄울 수 있는 호스트(Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.29.0"
+  version: "1.30.0"
   locale: ko
 description: >-
-  업무 지시 뒤, 전수조사해서 바꾸기 전에 계획을 읽기 전용으로 검수받는다. 지금
-  세션 에이전트는 바꾸지 않는다. 검수자는 페이블. 오케스트레이션에 착수하기 전에
-  실행 문서를 비판한다. 페이블 검수받아봐, 페이블로 검수해봐, 페이블 검수,
-  페이블로 검수, opus 4.6, opus 4.6 검수, 컨설턴트 게이트, 전문가 의견,
-  자문 받아와, fable 자문, 페이블 자문, 전수조사, 업무 지시일 때 쓴다. 전수조사 후 수정에
-  착수하기 전, 그 계획으로 파일 10개 이상을 고치기 전에 선제 적용. grep,
-  기계적 수정, 명확한 버그수정은 건너뛴다. 토큰을 추가로 쓴다. 자문은 정답이 아니다.
-  효과는 자식에게 넘기기 전, 계획과 자식 프롬프트에서 난다. 머지 때가 아니다.
-  사용자가 영어면 orchestrator-consultant-gate(브랜치 main)를 쓰고 이 사본을
-  실행하지 않는다.
+  클로드코드 답변이 장황, 읽기 힘들, 어떤 skill, 클로드코드 세팅, opus 5,
+  쉽게 해달라, opus 4.6. 업무 지시 뒤, 전수조사해서 바꾸기 전에 계획을 읽기
+  전용으로 검수받는다. 지금 세션 에이전트는 바꾸지 않는다. 검수자는 페이블.
+  오케스트레이션에 착수하기 전에 실행 문서를 비판한다. 페이블 검수받아봐,
+  페이블로 검수해봐, 페이블 검수, 페이블로 검수, opus 4.6, opus 4.6 검수,
+  컨설턴트 게이트, 전문가 의견, 자문 받아와, fable 자문, 페이블 자문, 전수조사,
+  업무 지시일 때 쓴다. 전수조사 후 수정에 착수하기 전, 그 계획으로 파일 10개
+  이상을 고치기 전에 선제 적용. grep, 기계적 수정, 명확한 버그수정은 건너뛴다.
+  토큰을 추가로 쓴다. 자문은 정답이 아니다. 효과는 자식에게 넘기기 전, 계획과
+  자식 프롬프트에서 난다. 머지 때가 아니다. 사용자가 영어면
+  orchestrator-consultant-gate(브랜치 main)를 쓰고 이 사본을 실행하지 않는다.
 ---
 
 # Orchestrator Consultant Gate — 한국어
@@ -26,6 +27,19 @@ description: >-
 이 세션에서 **실행 문서**를 작성한다(Grok, Codex, Claude, GPT, …). 부모를 바꾸지 않는다.
 
 실행 문서는 계획과, 오케스트레이션에 넘길 자식 프롬프트다. **오케스트레이션에 착수하기 전**에 비판적으로 다듬는다. **기본 검수자는 페이블**이다. 읽기 전용으로 띄운다(파일·도구 없음). 반박한다. 소화는 네가 한다. 나온 말은 **정답이 아니다.** 항목마다 accept / reject / defer 와 이유를 붙인다.
+
+## Claude Code
+
+답변이 장황하다, 읽기 힘들다, 어떤 skill이냐, opus 5가 되면서 심해졌다, opus 4.6을 쓰라는 말은 **세팅** 일이다. CLAUDE.md에 be concise를 쓰지 않는다. 최신 opus는 4.6과 같지 않다. 모르는 영역은 사용자 개발 언어에 비유한다.
+
+`--install-claude`는 `settings.json`의 `model`을 레지스트리 opus 4.6으로 고정한다(`generation_ok`이면 `[1m]`). `output-styles/consult-gate-brief.md`를 쓰고(`keep-coding-instructions: true`), `outputStyle`은 비어 있을 때만 넣는다. `--force-output-style`은 덮어쓴다. `--uninstall-claude`는 이 스킬의 `outputStyle`과 그 파일을 지운다. 이전 모델은 되돌리지 않는다. Grok에는 `outputStyle`이 없다.
+
+```bash
+python3 scripts/resolve-consult.py --install-claude --json
+python3 scripts/resolve-consult.py --uninstall-claude --json
+```
+
+효과는 다음 Claude Code 턴이다. 짧은 답, opus 4.6, 비유. CLAUDE.md를 고친 것으로는 보이지 않는다.
 
 ## 게이트
 

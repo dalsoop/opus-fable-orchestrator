@@ -1023,6 +1023,108 @@ def run() -> int:
                 results.append(fail(sid, "EVAL_LIVE missing"))
             else:
                 results.append(ok(sid))
+        elif sc["expect"] == "skill_claude_settings":
+            miss = [n for n in EVAL.get("settings_needles", []) if n not in skill_text]
+            results.append(fail(sid, f"missing={miss}") if miss else ok(sid))
+        elif sc["expect"] == "claude_style_file":
+            style = ROOT / "output-styles" / "consult-gate-brief.md"
+            if not style.is_file():
+                results.append(fail(sid, "missing output-styles/consult-gate-brief.md"))
+            else:
+                body = style.read_text(encoding="utf-8")
+                miss = [n for n in EVAL.get("style_needles", []) if n not in body]
+                if "keep-coding-instructions: true" not in body:
+                    miss.append("keep-coding-instructions: true")
+                results.append(fail(sid, f"missing={miss}") if miss else ok(sid))
+        elif sc["expect"] == "install_claude_settings":
+            import subprocess
+            import tempfile
+            from pathlib import Path as _Path
+
+            script = ROOT / "scripts" / "resolve-consult.py"
+            with tempfile.TemporaryDirectory() as tmp:
+                settings = _Path(tmp) / "settings.json"
+                styles = _Path(tmp) / "output-styles"
+                env = {
+                    **os.environ,
+                    "ORCHESTRATOR_CONSULT_HOOK_SETTINGS": str(settings),
+                    "ORCHESTRATOR_CONSULT_OUTPUT_STYLES": str(styles),
+                }
+                installed = subprocess.run(
+                    [sys.executable, str(script), "--install-claude", "--json"],
+                    capture_output=True,
+                    text=True,
+                    env=env,
+                    cwd=str(ROOT),
+                )
+                try:
+                    data = json.loads(settings.read_text(encoding="utf-8"))
+                    report = json.loads(installed.stdout or "{}")
+                except (OSError, json.JSONDecodeError) as e:
+                    results.append(fail(sid, f"settings {e} rc={installed.returncode} {installed.stderr[-400:]}"))
+                else:
+                    model = (data.get("model") or "").lower().replace(".", "-")
+                    style_path = styles / "consult-gate-brief.md"
+                    claude_md = settings.parent / "CLAUDE.md"
+                    if installed.returncode != 0:
+                        results.append(fail(sid, installed.stderr[-400:] or installed.stdout[-400:]))
+                    elif "opus-4-6" not in model:
+                        results.append(fail(sid, f"model {data.get('model')!r}"))
+                    elif data.get("outputStyle") != "consult-gate-brief":
+                        results.append(fail(sid, f"outputStyle {data.get('outputStyle')!r}"))
+                    elif not style_path.is_file() or "keep-coding-instructions: true" not in style_path.read_text(
+                        encoding="utf-8"
+                    ):
+                        results.append(fail(sid, "style file missing keep-coding-instructions"))
+                    elif claude_md.is_file() or report.get("claude_md_written"):
+                        results.append(fail(sid, "wrote CLAUDE.md"))
+                    else:
+                        settings.write_text(
+                            json.dumps({"model": "keep-me", "outputStyle": "fluent-korean"}),
+                            encoding="utf-8",
+                        )
+                        kept = subprocess.run(
+                            [sys.executable, str(script), "--install-claude", "--json"],
+                            capture_output=True,
+                            text=True,
+                            env=env,
+                            cwd=str(ROOT),
+                        )
+                        after_keep = json.loads(settings.read_text(encoding="utf-8"))
+                        forced = subprocess.run(
+                            [
+                                sys.executable,
+                                str(script),
+                                "--install-claude",
+                                "--force-output-style",
+                                "--json",
+                            ],
+                            capture_output=True,
+                            text=True,
+                            env=env,
+                            cwd=str(ROOT),
+                        )
+                        after_force = json.loads(settings.read_text(encoding="utf-8"))
+                        gone = subprocess.run(
+                            [sys.executable, str(script), "--uninstall-claude", "--json"],
+                            capture_output=True,
+                            text=True,
+                            env=env,
+                            cwd=str(ROOT),
+                        )
+                        after_un = json.loads(settings.read_text(encoding="utf-8"))
+                        if kept.returncode != 0 or after_keep.get("outputStyle") != "fluent-korean":
+                            results.append(fail(sid, f"kept {after_keep}"))
+                        elif forced.returncode != 0 or after_force.get("outputStyle") != "consult-gate-brief":
+                            results.append(fail(sid, f"force {after_force}"))
+                        elif gone.returncode != 0 or after_un.get("outputStyle") == "consult-gate-brief":
+                            results.append(fail(sid, f"uninstall {after_un}"))
+                        elif "opus-4-6" not in (after_un.get("model") or "").lower().replace(".", "-"):
+                            results.append(fail(sid, f"uninstalled model {after_un.get('model')!r}"))
+                        elif (styles / "consult-gate-brief.md").is_file():
+                            results.append(fail(sid, "style file left after uninstall"))
+                        else:
+                            results.append(ok(sid, "pin 4.6; keep/force/uninstall; no CLAUDE.md"))
         elif sc["expect"] == "resolve_opus_1m":
             import subprocess
 

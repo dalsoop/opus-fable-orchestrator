@@ -45,6 +45,12 @@
       "checks": { "preserve_tokens": ["자문"] }
     },
     {
+      "id": "happy-08-verbose-claude",
+      "should_trigger": true,
+      "prompt": "클로드코드 답변이 장황해서 읽기 힘들어요. 어떤 skill 써야 하나요. opus 4.6",
+      "checks": { "preserve_tokens": ["outputStyle"] }
+    },
+    {
       "id": "neg-01-grep",
       "should_trigger": false,
       "prompt": "TODO grep 해줘",
