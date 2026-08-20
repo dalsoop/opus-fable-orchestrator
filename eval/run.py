@@ -484,14 +484,26 @@ def run() -> int:
                         text=True,
                         env=env,
                     )
-                    ok_rec = subprocess.run(
-                        [sys.executable, str(script), "--record", "--ok", "--read-only"],
+                    printed = subprocess.run(
+                        [sys.executable, str(script), "--print-spawn"],
                         capture_output=True,
                         text=True,
                         env=env,
                     )
-                    if listed.returncode != 0 or ok_rec.returncode != 0:
-                        results.append(fail(sid, f"list+record rc list={listed.returncode} rec={ok_rec.returncode}"))
+                    line = (printed.stdout or "").strip()
+                    ok_rec = subprocess.run(
+                        [sys.executable, str(script), "--record", "--ok", "--read-only", "--spawn-line", line],
+                        capture_output=True,
+                        text=True,
+                        env=env,
+                    )
+                    if listed.returncode != 0 or printed.returncode != 0 or ok_rec.returncode != 0:
+                        results.append(
+                            fail(
+                                sid,
+                                f"list+print+record rc list={listed.returncode} print={printed.returncode} rec={ok_rec.returncode}",
+                            )
+                        )
                     else:
                         results.append(ok(sid, "exit 2 then 0"))
         elif sc["expect"] == "print_spawn_requires_list":
@@ -614,6 +626,99 @@ def run() -> int:
                         )
                     else:
                         results.append(ok(sid, "stale exit 2"))
+        elif sc["expect"] == "record_requires_spawn_line":
+            import subprocess
+            import tempfile
+
+            script = ROOT / "scripts" / "resolve-consult.py"
+            with tempfile.TemporaryDirectory() as tmp:
+                env = {**os.environ, "ORCHESTRATOR_CONSULT_HOME": tmp, "CONSULT_SESSION": "eval-spawn-line"}
+                listed = subprocess.run(
+                    [sys.executable, str(script), "--list", "--json"],
+                    capture_output=True,
+                    text=True,
+                    env=env,
+                )
+                missing = subprocess.run(
+                    [sys.executable, str(script), "--record", "--ok", "--read-only"],
+                    capture_output=True,
+                    text=True,
+                    env=env,
+                )
+                printed = subprocess.run(
+                    [sys.executable, str(script), "--print-spawn"],
+                    capture_output=True,
+                    text=True,
+                    env=env,
+                )
+                line = (printed.stdout or "").strip()
+                wrong = subprocess.run(
+                    [
+                        sys.executable,
+                        str(script),
+                        "--record",
+                        "--ok",
+                        "--read-only",
+                        "--spawn-line",
+                        "claude -p --model forged --max-turns 1",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    env=env,
+                )
+                ok_rec = subprocess.run(
+                    [sys.executable, str(script), "--record", "--ok", "--read-only", "--spawn-line", line],
+                    capture_output=True,
+                    text=True,
+                    env=env,
+                )
+                if listed.returncode != 0 or printed.returncode != 0:
+                    results.append(fail(sid, f"list/print rc {listed.returncode}/{printed.returncode}"))
+                elif missing.returncode != 2:
+                    results.append(fail(sid, f"no spawn-line rc={missing.returncode}"))
+                elif wrong.returncode != 2:
+                    results.append(fail(sid, f"forged spawn-line rc={wrong.returncode}"))
+                elif ok_rec.returncode != 0:
+                    results.append(fail(sid, f"matching spawn-line rc={ok_rec.returncode} {ok_rec.stderr[-400:]}"))
+                else:
+                    results.append(ok(sid, "missing/wrong=2 match=0"))
+        elif sc["expect"] == "locale_shared_procedure":
+            needles = EVAL.get("locale_shared_needles") or []
+            loc = EVAL.get("locale")
+            other = ROOT.parent / (
+                "orchestrator-consultant-gate-ko" if loc == "en" else "orchestrator-consultant-gate"
+            )
+            here = skill_text
+            if not needles:
+                results.append(fail(sid, "locale_shared_needles empty"))
+            elif not (other / "SKILL.md").is_file():
+                results.append({"id": sid, "ok": True, "detail": "skipped (no sibling checkout)", "skipped": True})
+            else:
+                there = (other / "SKILL.md").read_text(encoding="utf-8")
+                miss_here = [n for n in needles if n not in here]
+                miss_there = [n for n in needles if n not in there]
+                if miss_here or miss_there:
+                    results.append(fail(sid, f"here={miss_here} sibling={miss_there}"))
+                else:
+                    results.append(ok(sid, ",".join(needles)))
+        elif sc["expect"] == "sibling_script_same":
+            import hashlib
+
+            loc = EVAL.get("locale")
+            other = ROOT.parent / (
+                "orchestrator-consultant-gate-ko" if loc == "en" else "orchestrator-consultant-gate"
+            )
+            here = ROOT / "scripts" / "resolve-consult.py"
+            there = other / "scripts" / "resolve-consult.py"
+            if not there.is_file():
+                results.append({"id": sid, "ok": True, "detail": "skipped (no sibling checkout)", "skipped": True})
+            else:
+                a = hashlib.sha256(here.read_bytes()).hexdigest()
+                b = hashlib.sha256(there.read_bytes()).hexdigest()
+                if a != b:
+                    results.append(fail(sid, f"resolve-consult.py drifted {a[:8]} != {b[:8]}"))
+                else:
+                    results.append(ok(sid, a[:12]))
         elif sc["expect"] == "eval_live_gated":
             src = (ROOT / "eval" / "run.py").read_text(encoding="utf-8")
             if 'sc.get("harness") == "live" and not live' not in src:

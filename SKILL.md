@@ -1,12 +1,12 @@
 ---
 name: orchestrator-consultant-gate-ko
-version: 1.22.0
+version: 1.23.0
 kind: skill
 license: MIT
 compatibility: 읽기 전용 하위 에이전트를 띄울 수 있는 호스트(Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.22.0"
+  version: "1.23.0"
   locale: ko
 description: >-
   업무 지시 뒤, 전수조사해서 바꾸기 전에 계획을 읽기 전용으로 검수받는다. 지금
@@ -51,7 +51,7 @@ spawn이 막히면 폴백을 한 번 하거나 건너뛴다. 건너뛴 게이트
 
 ## 검수
 
-세션 유지. **필수 — 이번 턴, spawn 전**에 `--list --json`. `selectable`인 이름을 고른다. 목록 없이 spawn하지 않는다. `--list`는 이번 세션(`CONSULT_SESSION`, 없으면 `GROK_SESSION_ID` / `CLAUDE_SESSION`)에 3600초 동안 찍힌다. 스탬프가 없거나, 만료됐거나, 다른 세션이면 `--record`와 `--print-spawn`은 종료 코드 2. 기본은 페이블. 막히면 opus 4.6. `--report`는 **사용 이력**(spawn 원장)이지 검수 품질이 아니다. 기본 `python3 eval/run.py`는 정적이다. 사용자가 라이브 검수를 요청했을 때만 `EVAL_LIVE=1`. 라이브는 토큰을 쓴다. `EVAL_LIVE=1`이 없으면 라이브 하네스는 spawn하지 않는다.
+세션 유지. **필수 — 이번 턴, spawn 전**에 `--list --json`. `selectable`인 이름을 고른다. 목록 없이 spawn하지 않는다. `--list`는 이번 세션(`CONSULT_SESSION`, 없으면 `GROK_SESSION_ID` / `CLAUDE_SESSION`)에 3600초 동안 찍힌다. 그 스탬프는 **실수 방지이지 샌드박스가 아니다.** 다른 프로세스가 `CONSULT_SESSION`을 넣을 수 있다. `--print-spawn`은 **Grok만**. Cursor와 Claude Code는 Task/Agent로 spawn한다. 스탬프가 없거나, 만료됐거나, 다른 세션이면 `--record`와 `--print-spawn`은 종료 코드 2. `--record`는 이번 턴 `--print-spawn` 표준출력과 같은 `--spawn-line`이 필요하다. 기본은 페이블. 막히면 opus 4.6. `--report`는 **사용 이력**(spawn 원장)이지 검수 품질이 아니다. 기본 `python3 eval/run.py`는 정적이다. 사용자가 라이브 검수를 요청했을 때만 `EVAL_LIVE=1`. 라이브는 토큰을 쓴다. `EVAL_LIVE=1`이 없으면 라이브 하네스는 spawn하지 않는다.
 
 ```bash
 python3 scripts/resolve-consult.py --list --json
@@ -79,6 +79,6 @@ Cursor: `Task({ description: "Consult", subagent_type: "generalPurpose", model: 
 자문이 오면 **부모 에이전트**가 `templates/digest.md`를 채운다. 완료: 모든 항목 accept / reject / defer + 이유, `min(코드 점수, 도달 가능 상한)`, 사용자에게 `host` + `registry` + `slug` + `spawn_ok` + `read_only` + `fallback_used`. 상한은 외부 조건. 파일 점수와 라이브 spawn 점수를 더하지 말 것. 반박이 없는 자문은 완료가 아니다. 자문은 **정답이 아니다.**
 
 ```bash
-python3 scripts/resolve-consult.py --record --ok --read-only
-python3 scripts/resolve-consult.py --record --ok --read-only --fallback-used
+python3 scripts/resolve-consult.py --record --ok --read-only --spawn-line "$line"
+python3 scripts/resolve-consult.py --record --ok --read-only --fallback-used --spawn-line "$line"
 ```
