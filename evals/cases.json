@@ -39,6 +39,12 @@
       "checks": { "preserve_tokens": ["자문"] }
     },
     {
+      "id": "happy-07-opus-46",
+      "should_trigger": true,
+      "prompt": "opus 4.6 검수해봐. 업무 지시 뒤 전수조사해서 바꾸기 전이야",
+      "checks": { "preserve_tokens": ["자문"] }
+    },
+    {
       "id": "neg-01-grep",
       "should_trigger": false,
       "prompt": "TODO grep 해줘",

@@ -6,6 +6,8 @@
 
 ```bash
 npx skills add dalsoop/orchestrator-consultant-gate@ko -g -y
+python3 scripts/resolve-consult.py --list --json
+python3 scripts/resolve-consult.py --report --json
 python3 scripts/resolve-consult.py --json
 python3 eval/run.py
 EVAL_LIVE=1 python3 eval/run.py   # Cursor/Claude spawn. Grok는 claude -p --max-turns 1.
@@ -21,7 +23,7 @@ EVAL_LIVE=1 python3 eval/run.py   # Cursor/Claude spawn. Grok는 claude -p --max
 
 한 AI가 업무 지시로 **실행 문서**를 쓴다. **GATE**는 오케스트레이션과 전수조사해서 바꾸기 전이다. 페이블이 읽기 전용으로 **반박**한다. 놓친 병목을 하나 더 찾고, 자식 프롬프트의 빈칸을 채우며, 누락을 잡는다. 효과는 **자식에게 넘기기 전** 그 문서에서 난다. 머지 때가 아니다. 의견이 돌아오면 소화한다. 세션은 그대로다. 자문은 정답이 아니다.
 
-검수자는 페이블이다(`agent-model-registry get fable`). spawn은 `--json`의 `slug`. 이번 턴에만 `--name grok`, `--name gpt`, `--name gemini`, `--name opus`. 페이블이 막히면 `--name grok` 또는 `--name opus`(opus 4.6). 호스트: Cursor, Claude Code, Codex, Grok TUI(`GROK_AGENT=1`). 세션 에이전트가 게이트에서 `templates/`를 채운다.
+검수자는 `--list`에서 고른다. 기본은 페이블(`agent-model-registry get fable`). spawn은 `--json`의 `slug`. 페이블이 막히면 목록의 opus 4.6이지 grok가 아니다. `--report`는 사용 이력이지 검수 품질이 아니다. Grok는 `spawn_subagent`가 아니라 `claude -p`가 먼저다. 기본 eval은 정적이다. `EVAL_LIVE=1`은 요청했을 때만. 호스트: Cursor, Claude Code, Codex, Grok TUI(`GROK_AGENT=1`). 세션 에이전트가 게이트에서 `templates/`를 채운다.
 
 [`SKILL.md`](SKILL.md) · [`templates/`](templates/) · [`scripts/`](scripts/) · [`eval/`](eval/) · MIT
 

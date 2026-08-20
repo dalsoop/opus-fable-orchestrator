@@ -1,12 +1,12 @@
 ---
 name: orchestrator-consultant-gate-ko
-version: 1.19.0
+version: 1.21.0
 kind: skill
 license: MIT
 compatibility: 읽기 전용 하위 에이전트를 띄울 수 있는 호스트(Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.19.0"
+  version: "1.21.0"
   locale: ko
 description: >-
   업무 지시 뒤, 전수조사해서 바꾸기 전에 계획을 읽기 전용으로 검수받는다. 지금
@@ -51,9 +51,11 @@ spawn이 막히면 폴백을 한 번 하거나 건너뛴다. 건너뛴 게이트
 
 ## 검수
 
-세션 유지. 기본 자식은 페이블(`agent-model-registry get fable`). spawn은 `--json`의 `slug`. 다른 모델은 이번 턴 덮어쓰기만:
+세션 유지. **필수 — 이번 턴, spawn 전**에 `--list --json`. `selectable`인 이름을 고른다. 목록 없이 spawn하지 않는다. 기본은 페이블. 막히면 opus 4.6. `--report`는 **사용 이력**(spawn 원장)이지 검수 품질이 아니다. 기본 `python3 eval/run.py`는 정적이다. 사용자가 라이브 검수를 요청했을 때만 `EVAL_LIVE=1`. 라이브는 토큰을 쓴다.
 
 ```bash
+python3 scripts/resolve-consult.py --list --json
+python3 scripts/resolve-consult.py --report --json
 python3 scripts/resolve-consult.py --json
 python3 scripts/resolve-consult.py --name grok --json
 python3 scripts/resolve-consult.py --name gpt --json
@@ -61,15 +63,15 @@ python3 scripts/resolve-consult.py --name gemini --json
 python3 scripts/resolve-consult.py --name opus --json
 ```
 
-`--json` → `{host, registry, slug, name, fallbacks, fallback_slug, spawn, read_only}`. `fallbacks`에 grok와 opus 4.6이 있다. `CONSULT_HOST`: cursor|claude|codex|grok. `slug`를 쓴다. 스킬에 모델 id를 복사하지 않는다. Cursor만 Task slug(`thinking-high`가 목록에 있으면). `--name opus`는 레지스트리 opus **4.6**, 호스트가 받으면 `[1m]`(`generation_ok`). Claude/Codex/Grok에서 `cursor --list-models` 금지. CLI 없으면 스크립트가 그 계열을 찍음. Grok TUI는 `GROK_AGENT=1`.
+`--json` → `{host, registry, slug, name, fallbacks, fallback_slug, spawn, read_only}`. 첫 `fallback_slug`는 opus 4.6. grok는 이번 턴 덮어쓰기만. `CONSULT_HOST`: cursor|claude|codex|grok. `slug`를 쓴다. 스킬에 모델 id를 복사하지 않는다. Cursor만 Task slug(`thinking-high`가 목록에 있으면). `--name opus`는 레지스트리 opus **4.6**, 호스트가 받으면 `[1m]`(`generation_ok`). Claude/Codex/Grok에서 `cursor --list-models` 금지. CLI 없으면 스크립트가 그 계열을 찍음. Grok TUI는 `GROK_AGENT=1`.
 
-자식이 **막히면**(Cursor Review Data Policy, HTTP 402, Grok가 페이블을 못 띄움): `--name grok` 또는 `--name opus` 한 번. opus는 4.6이어야 한다. 아니면 건너뛰고 다음 게이트. 멈추지 말 것. Grok에서는 Claude CLI가 있으면 `claude -p --model <slug> --max-turns 1`.
+자식이 **막히면**(Cursor Review Data Policy, HTTP 402, Grok가 페이블을 못 띄움): `--list`에서 opus를 한 번 고른다(`generation_ok`). grok를 먼저 쓰지 않는다. 아니면 건너뛰고 다음 게이트. 멈추지 말 것. Grok는 먼저 `claude -p --model <slug> --max-turns 1`.
 
 `templates/` 는 뼈대다. **부모 에이전트**가 채운다. 사람이 게이트 전에 쓰지 않는다.
 
 `templates/fable-briefing.md`에 실행 문서를 넣는다(증거 ≠ 해석). 자식에게: 이 계획의 검수자이지 두 번째 실행자가 아니다. 동의하지 마라. 계획을 다시 짜지 마라. 반박 + 닫힌 3–5 + 열린 1: "내가 놓친 카테고리는?" 비밀 금지. `페이블 검수받아봐` / `페이블로 검수해봐` / `페이블 검수` / `페이블 자문` / `fable 자문`은 트리거.
 
-Cursor: `Task({ description: "Consult", subagent_type: "generalPurpose", model: "<slug>", prompt: <브리핑> })`. Task가 막히면 `--name grok` 또는 `--name opus`(opus 4.6). Claude Code: `Agent({ model: "<slug>", ... })`. Codex: `-m <slug>`. Grok: Claude CLI가 있으면 `claude -p --model <slug> --max-turns 1`. slug가 Grok 모델이면 `spawn_subagent`. 도구 호출 지시 → reject. Timeout → 진행, 다음 게이트에서 재시도.
+Cursor: `Task({ description: "Consult", subagent_type: "generalPurpose", model: "<slug>", prompt: <브리핑> })`. Task가 막히면 `--list`에서 opus를 고른다. grok를 먼저 쓰지 않는다. Claude Code: `Agent({ model: "<slug>", ... })`. Codex: `-m <slug>`. Grok: 먼저 `claude -p --model <slug> --max-turns 1`. slug가 Grok 모델이 아니면 `spawn_subagent`로 시작하지 않는다. 도구 호출 지시 → reject. Timeout → 진행, 다음 게이트에서 재시도.
 
 ## 소화
 

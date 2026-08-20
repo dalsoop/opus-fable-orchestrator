@@ -1,5 +1,6 @@
 {
   "skill": "orchestrator-consultant-gate-ko",
+  "notes": "정본 게이트는 python3 eval/run.py. evals/cases.json은 cases_happy 트리거 픽스처만.",
   "locale": "ko",
   "version_file": "VERSION",
   "fable_model_slug": "claude-fable-5",
@@ -24,10 +25,10 @@
   "briefing_sections": ["원시 증거", "내 해석", "내 결론", "질문"],
   "open_question": "내가 놓친 카테고리는?",
   "timeout_needles": ["Timeout", "재시도"],
-  "observability_needles": ["--record", "fallback_slug", "fallbacks", "GROK_AGENT", "spawn_subagent"],
+  "observability_needles": ["--record", "fallback_slug", "fallbacks", "GROK_AGENT", "spawn_subagent", "--list", "--report"],
   "parent_needles": ["부모를 바꾸지 않는다", "Grok", "Codex"],
   "parent_forbidden": [],
-  "critic_needles": ["검수자는 페이블", "부모 에이전트", "동의하지 마라", "오케스트레이션에 착수하기 전", "정답이 아니다", "사용자가 영어면", "이 사본을 실행하지 않는다", "브랜치 `main`", "자식에게 넘기기 전", "거짓 확신", "--name grok", "--name opus", "4.6"],
+  "critic_needles": ["검수자는 페이블", "부모 에이전트", "동의하지 마라", "오케스트레이션에 착수하기 전", "정답이 아니다", "사용자가 영어면", "이 사본을 실행하지 않는다", "브랜치 `main`", "자식에게 넘기기 전", "거짓 확신", "--name grok", "--name opus", "4.6", "spawn 전", "사용 이력", "EVAL_LIVE"],
   "scenarios": [
     { "id": "version-sync", "type": "version", "expect": "VERSION_matches_frontmatter" },
     { "id": "locale-ko", "type": "trigger", "expect": "description_has_required_not_forbidden" },
@@ -47,6 +48,11 @@
     { "id": "consult-other-models", "type": "roundtrip", "expect": "skill_names_other_consults" },
     { "id": "resolve-grok", "type": "roundtrip", "expect": "resolve_named_consult" },
     { "id": "resolve-opus-window", "type": "roundtrip", "expect": "resolve_opus_1m" },
+    { "id": "consult-list", "type": "roundtrip", "expect": "consult_list" },
+    { "id": "consult-list-fable-spawn", "type": "roundtrip", "expect": "consult_list_fable_spawn" },
+    { "id": "consult-list-opus-spawn", "type": "roundtrip", "expect": "consult_list_opus_spawn" },
+    { "id": "consult-list-unresolved-skip", "type": "roundtrip", "expect": "consult_list_unresolved_skip" },
+    { "id": "locale-sibling-list", "type": "roundtrip", "expect": "locale_sibling_list" },
     { "id": "observability", "type": "roundtrip", "expect": "skill_mentions_observability" },
     { "id": "fable-is-critic", "type": "roundtrip", "expect": "skill_fable_is_critic" },
     {
