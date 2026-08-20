@@ -7,6 +7,7 @@ English (`main`). Korean: branch [`ko`](https://github.com/dalsoop/orchestrator-
 ```bash
 npx skills add dalsoop/orchestrator-consultant-gate -g -y
 python3 scripts/resolve-consult.py --list --json
+python3 scripts/resolve-consult.py --exec-spawn --briefing templates/fable-briefing.md
 python3 scripts/resolve-consult.py --print-spawn
 python3 scripts/resolve-consult.py --report --json
 python3 scripts/resolve-consult.py --json

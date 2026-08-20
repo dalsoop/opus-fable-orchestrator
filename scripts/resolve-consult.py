@@ -237,12 +237,45 @@ def patch_stamp(**fields: object) -> dict | None:
 
 
 def session_id() -> str:
-    return (
-        os.environ.get("CONSULT_SESSION")
-        or os.environ.get("GROK_SESSION_ID")
-        or os.environ.get("CLAUDE_SESSION")
-        or "default"
-    )
+    host = os.environ.get("GROK_SESSION_ID") or os.environ.get("CLAUDE_SESSION")
+    if host:
+        return host
+    return os.environ.get("CONSULT_SESSION") or "default"
+
+
+def prepare_claude_spawn(name: str, data: dict) -> tuple[str, int]:
+    if not require_listed(name):
+        return "", 2
+    first = (data.get("spawn") or {}).get("first")
+    if first != "claude -p":
+        print(
+            f"spawn_first={first!r}; Grok spawn is only for fable/opus. pick a listed name",
+            file=sys.stderr,
+        )
+        return "", 2
+    if (load_list_stamp() or {}).get("spawn_used"):
+        print("run --list first; spawn-line already recorded", file=sys.stderr)
+        return "", 2
+    line = claude_spawn_line(data["slug"])
+    if not patch_stamp(
+        spawn_line=line,
+        spawn_hash=line_hash(line),
+        spawn_name=name.lower(),
+    ):
+        print("run --list first this turn", file=sys.stderr)
+        return "", 2
+    return line, 0
+
+
+def exec_claude(line: str, briefing: Path) -> int:
+    parts = line.split()
+    bin_ = shutil.which(parts[0]) if parts else None
+    if not bin_:
+        print("claude not on PATH", file=sys.stderr)
+        return 2
+    with briefing.open("r", encoding="utf-8") as stdin:
+        p = subprocess.run([bin_, *parts[1:]], stdin=stdin)
+    return p.returncode
 
 
 def save_list_stamp(data: dict) -> None:
@@ -382,6 +415,9 @@ def main() -> int:
     ap.add_argument("--read-only", action="store_true")
     ap.add_argument("--fallback-used", action="store_true")
     ap.add_argument("--print-spawn", action="store_true", help="print Grok claude -p line; requires --list")
+    ap.add_argument("--exec-spawn", action="store_true", help="run stamped claude -p and record; Grok only")
+    ap.add_argument("--briefing", default="", help="briefing file for --exec-spawn")
+    ap.add_argument("--dry-run", action="store_true", help="with --exec-spawn, print the line and do not exec")
     ap.add_argument("--spawn-line", default="", help="exact --print-spawn stdout; required with --record")
     args = ap.parse_args()
     host = detect_host()
@@ -415,29 +451,44 @@ def main() -> int:
     stamp = load_list_stamp()
     data["list_ok"] = bool(stamp) and args.name.lower() in (stamp.get("names") or [])
     if args.print_spawn:
-        if not require_listed(args.name):
-            return 2
-        first = (data.get("spawn") or {}).get("first")
-        slug = data["slug"]
-        if first != "claude -p":
-            print(
-                f"spawn_first={first!r}; --print-spawn is only for fable/opus. pick a listed name",
-                file=sys.stderr,
-            )
-            return 2
-        line = claude_spawn_line(slug)
-        if (load_list_stamp() or {}).get("spawn_used"):
-            print("run --list first; spawn-line already recorded", file=sys.stderr)
-            return 2
-        if not patch_stamp(
-            spawn_line=line,
-            spawn_hash=line_hash(line),
-            spawn_name=args.name.lower(),
-        ):
-            print("run --list first this turn", file=sys.stderr)
-            return 2
+        line, rc = prepare_claude_spawn(args.name, data)
+        if rc:
+            return rc
         print(line)
         return 0
+    if args.exec_spawn:
+        line, rc = prepare_claude_spawn(args.name, data)
+        if rc:
+            return rc
+        if args.dry_run:
+            print(line)
+            return 0
+        briefing = Path(args.briefing) if args.briefing else None
+        if briefing is None or not briefing.is_file():
+            print("--exec-spawn needs --briefing FILE or --dry-run", file=sys.stderr)
+            return 2
+        code = exec_claude(line, briefing)
+        rec = {
+            "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "host": data["host"],
+            "name": data["name"],
+            "slug": data["slug"],
+            "registry": data.get("registry"),
+            "fallback_used": False,
+            "spawn_ok": code == 0,
+            "read_only": True,
+            "listed": True,
+            "executed": True,
+            "spawn_hash": line_hash(line),
+        }
+        path = record(rec)
+        patch_stamp(spawn_used=True)
+        if args.json:
+            rec["receipt"] = str(path)
+            print(json.dumps(rec))
+        else:
+            print(path)
+        return 0 if code == 0 else 1
     if args.record:
         if not require_listed(args.name):
             return 2
