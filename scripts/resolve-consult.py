@@ -343,6 +343,36 @@ def style_src() -> Path:
     return Path(__file__).resolve().parent.parent / "output-styles" / f"{STYLE_NAME}.md"
 
 
+def claude_install_state() -> Path:
+    return STATE / "claude-install.json"
+
+
+def load_claude_install() -> dict | None:
+    path = claude_install_state()
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def save_claude_install(data: dict) -> Path:
+    STATE.mkdir(parents=True, exist_ok=True)
+    path = claude_install_state()
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return path
+
+
+def pin_effective_for(rid: str | None, env_opus: str | None) -> bool:
+    if not generation_ok(rid, OPUS_GEN):
+        return False
+    if env_opus and not generation_ok(env_opus, OPUS_GEN):
+        return False
+    return True
+
+
 def install_claude(settings: Path, styles_dir: Path, force_style: bool) -> dict:
     src = style_src()
     if not src.is_file():
@@ -359,29 +389,40 @@ def install_claude(settings: Path, styles_dir: Path, force_style: bool) -> dict:
         bak.write_text(settings.read_text(encoding="utf-8"), encoding="utf-8")
     else:
         data = {}
+    prev_model = data.get("model")
+    prev_style = data.get("outputStyle")
+    sidecar = load_claude_install() or {}
+    if "prev_model" not in sidecar:
+        sidecar["prev_model"] = prev_model
+        sidecar["prev_outputStyle"] = prev_style
     host = detect_host()
     rid, slug = resolve("opus", host, allowlist(host))
     data["model"] = slug
-    prev = data.get("outputStyle")
     style_set = False
-    if force_style or not prev:
+    if force_style or not prev_style:
         data["outputStyle"] = STYLE_NAME
         style_set = True
+    sidecar["pinned_model"] = slug
+    sidecar["style_name"] = STYLE_NAME
+    save_claude_install(sidecar)
     settings.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     body = dest.read_text(encoding="utf-8")
+    env_opus = os.environ.get("ANTHROPIC_DEFAULT_OPUS_MODEL")
     return {
         "settings": str(settings),
         "model": slug,
         "generation": OPUS_GEN,
         "generation_ok": generation_ok(rid, OPUS_GEN),
+        "pin_effective": pin_effective_for(rid, env_opus),
         "outputStyle": data.get("outputStyle"),
         "outputStyle_set": style_set,
-        "outputStyle_kept": None if style_set else prev,
+        "outputStyle_kept": None if style_set else prev_style,
         "style_file": str(dest),
         "keep_coding_instructions": "keep-coding-instructions: true" in body,
         "claude_md_written": False,
-        "env_opus": os.environ.get("ANTHROPIC_DEFAULT_OPUS_MODEL"),
+        "env_opus": env_opus,
         "backup": str(bak) if bak else None,
+        "sidecar": str(claude_install_state()),
     }
 
 
@@ -391,24 +432,42 @@ def uninstall_claude(settings: Path, styles_dir: Path) -> dict:
     if dest.is_file():
         dest.unlink()
         removed_file = True
+    sidecar = load_claude_install() or {}
+    prev_model = sidecar.get("prev_model")
+    prev_style = sidecar.get("prev_outputStyle")
+    pinned = sidecar.get("pinned_model")
     if not settings.is_file():
+        path = claude_install_state()
+        if path.is_file():
+            path.unlink()
         return {
             "settings": str(settings),
             "removed_style_file": removed_file,
             "outputStyle_removed": False,
-            "model_unchanged": True,
+            "model_restored": prev_model,
         }
     data = json.loads(settings.read_text(encoding="utf-8"))
     style_removed = False
     if data.get("outputStyle") == STYLE_NAME:
-        data.pop("outputStyle", None)
+        if prev_style:
+            data["outputStyle"] = prev_style
+        else:
+            data.pop("outputStyle", None)
         style_removed = True
-        settings.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    if pinned and data.get("model") == pinned:
+        if prev_model:
+            data["model"] = prev_model
+        else:
+            data.pop("model", None)
+    settings.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path = claude_install_state()
+    if path.is_file():
+        path.unlink()
     return {
         "settings": str(settings),
         "removed_style_file": removed_file,
         "outputStyle_removed": style_removed,
-        "model_unchanged": True,
+        "model_restored": data.get("model"),
         "model": data.get("model"),
     }
 

@@ -1,12 +1,12 @@
 ---
 name: orchestrator-consultant-gate-ko
-version: 1.30.0
+version: 1.31.0
 kind: skill
 license: MIT
 compatibility: 읽기 전용 하위 에이전트를 띄울 수 있는 호스트(Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.30.0"
+  version: "1.31.0"
   locale: ko
 description: >-
   클로드코드 답변이 장황, 읽기 힘들, 어떤 skill, 클로드코드 세팅, opus 5,
@@ -32,7 +32,7 @@ description: >-
 
 답변이 장황하다, 읽기 힘들다, 어떤 skill이냐, opus 5가 되면서 심해졌다, opus 4.6을 쓰라는 말은 **세팅** 일이다. CLAUDE.md에 be concise를 쓰지 않는다. 최신 opus는 4.6과 같지 않다. 모르는 영역은 사용자 개발 언어에 비유한다.
 
-`--install-claude`는 `settings.json`의 `model`을 레지스트리 opus 4.6으로 고정한다(`generation_ok`이면 `[1m]`). `output-styles/consult-gate-brief.md`를 쓰고(`keep-coding-instructions: true`), `outputStyle`은 비어 있을 때만 넣는다. `--force-output-style`은 덮어쓴다. `--uninstall-claude`는 이 스킬의 `outputStyle`과 그 파일을 지운다. 이전 모델은 되돌리지 않는다. Grok에는 `outputStyle`이 없다.
+`--install-claude`는 `settings.json`의 `model`을 레지스트리 opus 4.6으로 고정한다(`generation_ok`이면 `[1m]`). `output-styles/consult-gate-brief.md`를 쓰고(`keep-coding-instructions: true`), `outputStyle`은 비어 있을 때만 넣는다. `--force-output-style`은 덮어쓴다. `pin_effective`를 보고한다. `ANTHROPIC_DEFAULT_OPUS_MODEL`이 이후 세대를 가리키면 `pin_effective`는 false다. 파일은 그래도 쓴다. `--uninstall-claude`는 사이드카의 이전 `model`과 `outputStyle`을 되돌리고 그 파일을 지운다. Grok에는 `outputStyle`이 없다.
 
 ```bash
 python3 scripts/resolve-consult.py --install-claude --json
