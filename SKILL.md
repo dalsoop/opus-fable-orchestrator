@@ -1,12 +1,12 @@
 ---
 name: orchestrator-consultant-gate
-version: 1.16.1
+version: 1.17.0
 kind: skill
 license: MIT
 compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.16.1"
+  version: "1.17.0"
   locale: en
 description: >-
   Ask a read-only second opinion on the plan after a work order, before the
@@ -26,9 +26,7 @@ description: >-
 
 You write the **execution document** in this session (Grok, Codex, Claude, GPT, …). Do not switch parent.
 
-That document is the plan plus any child prompts you will dispatch. Critic it **before orchestration**. The **critic is Fable**. Spawn it read-only (no files, no tools). It rebuts. You digest. It does not replace you.
-
-The consult costs tokens. Its claims are abstract and probabilistic. They are **not ground truth**. Every item needs accept / reject / defer + a reason.
+That document is the plan plus any child prompts you will dispatch. Critic it **before orchestration**. The **default critic is Fable**. Spawn it read-only (no files, no tools). It rebuts. You digest. It does not replace you. Claims are **not ground truth**. Every item needs accept / reject / defer + a reason.
 
 ## Gate
 
@@ -61,11 +59,12 @@ python3 scripts/resolve-consult.py --json
 python3 scripts/resolve-consult.py --name grok --json
 python3 scripts/resolve-consult.py --name gpt --json
 python3 scripts/resolve-consult.py --name gemini --json
+python3 scripts/resolve-consult.py --name opus --json
 ```
 
-`--json` → `{host, registry, slug, name, fallback_slug, spawn, read_only}`. `CONSULT_HOST`: cursor|claude|codex|grok. Use `slug`. Cursor may map onto a Task slug (`thinking-high` when listed). Do not call `cursor --list-models` from Claude/Codex/Grok. If the CLI is missing, the script still prints that family. Grok TUI sets `GROK_AGENT=1`.
+`--json` → `{host, registry, slug, name, fallback_slug, spawn, read_only}`. `CONSULT_HOST`: cursor|claude|codex|grok. Use `slug`. Do not copy a model id into the skill. Cursor may map onto a Task slug (`thinking-high` when listed). `--name opus` is `agent-model-registry get opus` plus a 1M window suffix when the host accepts `[1m]`. Do not call `cursor --list-models` from Claude/Codex/Grok. If the CLI is missing, the script still prints that family. Grok TUI sets `GROK_AGENT=1`.
 
-If spawn is **blocked** (Cursor Review Data Policy, HTTP 402, Grok cannot spawn `claude-fable-5`): spawn `fallback_slug` once, or `--name grok`. Else skip and retry at the next gate. Do not stall. On Grok, Fable may run as `claude -p --model claude-fable-5 --max-turns 1` when that CLI exists.
+If spawn is **blocked** (Cursor Review Data Policy, HTTP 402, Grok cannot spawn the Fable slug): spawn `fallback_slug` once, or `--name grok`. Else skip and retry at the next gate. Do not stall. On Grok, run `claude -p --model <slug> --max-turns 1` when that CLI exists.
 
 `templates/` are skeletons. The **parent agent** fills them. The human does not write them before the gate.
 

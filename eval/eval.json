@@ -49,6 +49,7 @@
     { "id": "resolve-host", "type": "roundtrip", "expect": "resolve_reports_host" },
     { "id": "consult-other-models", "type": "roundtrip", "expect": "skill_names_other_consults" },
     { "id": "resolve-grok", "type": "roundtrip", "expect": "resolve_named_consult" },
+    { "id": "resolve-opus-window", "type": "roundtrip", "expect": "resolve_opus_1m" },
     { "id": "observability", "type": "roundtrip", "expect": "skill_mentions_observability" },
     { "id": "fable-is-critic", "type": "roundtrip", "expect": "skill_fable_is_critic" },
     {

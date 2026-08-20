@@ -21,7 +21,7 @@ Korean: `npx skills add dalsoop/orchestrator-consultant-gate@ko -g -y`
 
 One AI writes the **execution document** from the work order. **GATE** before orchestration and before audit-then-change. Fable **rebuts** it read-only: one more missed bottleneck, a hole in a child prompt, an omitted category. Notes go back. Same session. The payoff is **before dispatch**, in that document, not at merge. Claims are probabilistic. Digest them. Do not treat them as answers.
 
-The critic is Fable (`fable` → `claude-fable-5`). This turn, override with `--name grok`, `--name gpt`, or `--name gemini`. Blocked spawn → `fallback_slug` in the same `--json`. Hosts: Cursor, Claude Code, Codex, Grok TUI (`GROK_AGENT=1`). The session agent fills `templates/` at the gate.
+The critic is Fable (`agent-model-registry get fable`). This turn, override with `--name grok`, `--name gpt`, `--name gemini`, or `--name opus`. Spawn the `slug` from `--json`. Blocked spawn → `fallback_slug` in the same `--json`. Hosts: Cursor, Claude Code, Codex, Grok TUI (`GROK_AGENT=1`). The session agent fills `templates/` at the gate.
 
 [`SKILL.md`](SKILL.md) · [`templates/`](templates/) · [`scripts/`](scripts/) · [`eval/`](eval/) · MIT
 
