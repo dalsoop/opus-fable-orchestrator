@@ -1,24 +1,25 @@
 ---
 name: orchestrator-consultant-gate-ko
-version: 1.32.1
+version: 1.33.0
 kind: skill
 license: MIT
 compatibility: 읽기 전용 하위 에이전트를 띄울 수 있는 호스트(Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.32.1"
+  version: "1.33.0"
   locale: ko
 description: >-
-  클로드코드 답변이 장황, 읽기 힘들, 어떤 skill, 클로드코드 세팅, opus 5,
-  쉽게 해달라, opus 4.6. 업무 지시 뒤, 전수조사해서 바꾸기 전에 계획을 읽기
-  전용으로 검수받는다. 지금 세션 에이전트는 바꾸지 않는다. 검수자는 페이블.
-  오케스트레이션에 착수하기 전에 실행 문서를 비판한다. 페이블 검수받아봐,
-  페이블로 검수해봐, 페이블 검수, 페이블로 검수, opus 4.6, opus 4.6 검수,
-  컨설턴트 게이트, 전문가 의견, 자문 받아와, fable 자문, 페이블 자문, 전수조사,
-  업무 지시일 때 쓴다. 전수조사 후 수정에 착수하기 전, 그 계획으로 파일 10개
-  이상을 고치기 전에 선제 적용. grep, 기계적 수정, 명확한 버그수정은 건너뛴다.
-  토큰을 추가로 쓴다. 자문은 정답이 아니다. 효과는 자식에게 넘기기 전, 계획과
-  자식 프롬프트에서 난다. 머지 때가 아니다. 사용자가 영어면
+  클로드코드가 틀리고, 실수, 말이 어려워, 전문성, 쉽게 해달라, 어떤 skill,
+  클로드코드 세팅, opus 5, opus 4.6, 장황, 읽기 힘들. 업무 지시 뒤,
+  전수조사해서 바꾸기 전에 계획을 읽기 전용으로 검수받는다. 지금 세션
+  에이전트는 바꾸지 않는다. 검수자는 페이블. 오케스트레이션에 착수하기 전에
+  실행 문서를 비판한다. 페이블 검수받아봐, 페이블로 검수해봐, 페이블 검수,
+  페이블로 검수, opus 4.6, opus 4.6 검수, 컨설턴트 게이트, 전문가 의견,
+  자문 받아와, fable 자문, 페이블 자문, 전수조사, 업무 지시일 때 쓴다.
+  전수조사 후 수정에 착수하기 전, 그 계획으로 파일 10개 이상을 고치기 전에
+  선제 적용. grep, 기계적 수정, 명확한 버그수정은 건너뛴다. 토큰을 추가로
+  쓴다. 자문은 정답이 아니다. 효과는 자식에게 넘기기 전, 계획과 자식
+  프롬프트에서 난다. 머지 때가 아니다. 사용자가 영어면
   orchestrator-consultant-gate(브랜치 main)를 쓰고 이 사본을 실행하지 않는다.
 ---
 
@@ -30,7 +31,7 @@ description: >-
 
 ## Claude Code
 
-답변이 장황하다, 읽기 힘들다, 어떤 skill이냐, opus 5가 되면서 심해졌다, opus 4.6을 쓰라는 말은 **세팅** 일이다. CLAUDE.md에 be concise를 쓰지 않는다. 최신 opus는 4.6과 같지 않다. 모르는 영역은 사용자 개발 언어에 비유한다.
+답이 틀리고, 실수가 잦고, 말이 어려워졌다, 전문성으로 보면 자주 틀린다, 쉽게 해달라, 어떤 skill이냐, opus 5가 되면서 심해졌다, opus 4.6을 쓰라는 말은 **세팅** 일이다. 입으로 장황하다고 해도 같은 문이다. CLAUDE.md에 be concise를 쓰지 않는다. 최신 opus는 4.6과 같지 않다. 4.6을 핀하는 이유는 이후 opus가 전문 영역에서 더 지어내기 때문이다. 모르는 영역은 사용자 개발 언어에 비유한다. 글자 수가 성공 지표가 아니다.
 
 `--install-claude`는 `settings.json`의 `model`을 레지스트리 opus 4.6으로 고정한다(`generation_ok`이면 `[1m]`). `env.ANTHROPIC_DEFAULT_OPUS_MODEL`도 그 세대로 써서 `/model opus`가 이후 세대로 건너뛰지 않게 한다. `output-styles/consult-gate-brief.md`를 쓰고(`keep-coding-instructions: true`), `outputStyle`은 비어 있을 때만 넣는다. `--force-output-style`은 덮어쓴다. `pin_effective`는 쓴 settings env를 따른다. 지금 프로세스 env가 아니다. `--uninstall-claude`는 사이드카의 이전 `model`, `outputStyle`, env 키를 되돌리고 그 파일을 지운다. Grok에는 `outputStyle`이 없다. 셸은 고치지 않는다.
 
@@ -39,7 +40,7 @@ python3 scripts/resolve-consult.py --install-claude --json
 python3 scripts/resolve-consult.py --uninstall-claude --json
 ```
 
-효과는 다음 Claude Code 턴이다. 짧은 답, opus 4.6, 비유. CLAUDE.md를 고친 것으로는 보이지 않는다.
+효과는 다음 Claude Code 턴이다. opus 4.6, 비유, 지어내지 않는다. CLAUDE.md를 고친 것이나 단어 수가 줄어든 것으로는 보이지 않는다.
 
 ## 게이트
 

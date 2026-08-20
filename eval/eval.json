@@ -22,7 +22,11 @@
     "장황",
     "읽기 힘들",
     "어떤 skill",
-    "클로드코드"
+    "클로드코드",
+    "틀리고",
+    "실수",
+    "말이 어려워",
+    "전문성"
   ],
   "override_needles": ["resolve-consult.py", "--name opus"],
   "triggers_forbidden": ["expert consult", "second opinion"],
@@ -34,9 +38,9 @@
   "parent_forbidden": [],
   "locale_shared_needles": ["--print-spawn", "--spawn-line", "CONSULT_SESSION", "3600", "--list", "--record", "EVAL_LIVE", "4.6", "GROK_AGENT", "--exec-spawn", "--briefing", "PreToolUse", "block-hand-claude-p.py", "--install-claude", "outputStyle", "keep-coding-instructions", "CLAUDE.md", "pin_effective", "ANTHROPIC_DEFAULT_OPUS_MODEL"],
   "locale_procedure_order": ["--list --json", "--exec-spawn", "--print-spawn", "--spawn-line"],
-  "critic_needles": ["검수자는 페이블", "부모 에이전트", "동의하지 마라", "오케스트레이션에 착수하기 전", "정답이 아니다", "사용자가 영어면", "이 사본을 실행하지 않는다", "브랜치 `main`", "자식에게 넘기기 전", "거짓 확신", "--name grok", "--name opus", "4.6", "spawn 전", "사용 이력", "EVAL_LIVE", "종료 코드 2", "--print-spawn", "CONSULT_SESSION", "3600", "--spawn-line", "Grok만", "샌드박스가 아니다", "두 번 기록하지 못한다", "--exec-spawn", "--briefing", "GROK_SESSION_ID", "--install-hook", "Grok에는 PreToolUse가 없다", "--uninstall-hook", "CLAUDE.md에 be concise를 쓰지 않는다", "--install-claude", "--uninstall-claude", "--force-output-style", "outputStyle", "keep-coding-instructions", "비유", "pin_effective"],
-  "settings_needles": ["CLAUDE.md에 be concise를 쓰지 않는다", "outputStyle", "keep-coding-instructions", "--install-claude", "--uninstall-claude", "--force-output-style", "비유", "pin_effective"],
-  "style_needles": ["keep-coding-instructions: true", "비유", "CLAUDE.md에 be concise를 쓰지 않는다"],
+  "critic_needles": ["검수자는 페이블", "부모 에이전트", "동의하지 마라", "오케스트레이션에 착수하기 전", "정답이 아니다", "사용자가 영어면", "이 사본을 실행하지 않는다", "브랜치 `main`", "자식에게 넘기기 전", "거짓 확신", "--name grok", "--name opus", "4.6", "spawn 전", "사용 이력", "EVAL_LIVE", "종료 코드 2", "--print-spawn", "CONSULT_SESSION", "3600", "--spawn-line", "Grok만", "샌드박스가 아니다", "두 번 기록하지 못한다", "--exec-spawn", "--briefing", "GROK_SESSION_ID", "--install-hook", "Grok에는 PreToolUse가 없다", "--uninstall-hook", "CLAUDE.md에 be concise를 쓰지 않는다", "--install-claude", "--uninstall-claude", "--force-output-style", "outputStyle", "keep-coding-instructions", "비유", "pin_effective", "지어내지 않는다", "글자 수가 성공 지표가 아니다"],
+  "settings_needles": ["CLAUDE.md에 be concise를 쓰지 않는다", "outputStyle", "keep-coding-instructions", "--install-claude", "--uninstall-claude", "--force-output-style", "비유", "pin_effective", "지어내지 않는다"],
+  "style_needles": ["keep-coding-instructions: true", "비유", "지어내지 않는다", "CLAUDE.md에 be concise를 쓰지 않는다"],
   "scenarios": [
     { "id": "version-sync", "type": "version", "expect": "VERSION_matches_frontmatter" },
     { "id": "locale-ko", "type": "trigger", "expect": "description_has_required_not_forbidden" },
