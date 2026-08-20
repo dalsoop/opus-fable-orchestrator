@@ -1,12 +1,12 @@
 ---
 name: orchestrator-consultant-gate
-version: 1.26.0
+version: 1.27.0
 kind: skill
 license: MIT
 compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.26.0"
+  version: "1.27.0"
   locale: en
 description: >-
   Ask a read-only second opinion on the plan after a work order, before the
@@ -52,7 +52,7 @@ If spawn is blocked, fallback once or skip. A skipped gate has no effect. A gate
 
 ## Check
 
-Keep this session. **Must this turn, before spawn:** `--list --json`. Pick a `selectable` name. `--list` stamps the host session (`GROK_SESSION_ID` / `CLAUDE_SESSION`; `CONSULT_SESSION` only if those are unset) for 3600 seconds. That stamp is **mistake-prevention, not a sandbox**. `--exec-spawn` with `--briefing` is **Grok only**: it runs the stamped `claude -p` line and records. Do not invent `claude -p`. `--print-spawn` inspects that line. Cursor and Claude Code spawn with Task/Agent. `--record`, `--print-spawn`, and `--exec-spawn` exit 2 if the stamp is missing, stale, from another session, or already used. Manual `--record` needs `--spawn-line` from `--print-spawn`. The same printed line cannot be recorded twice. After `--record`, run `--list` before another `--print-spawn`. Default is fable. Blocked pick is opus 4.6. `--report` is **usage history**. `--json` is for machines. Default eval is static. `EVAL_LIVE=1` only when asked.
+Keep this session. **Must this turn, before spawn:** `--list --json`. Pick a `selectable` name. `--list` stamps the host session (`GROK_SESSION_ID` / `CLAUDE_SESSION`; `CONSULT_SESSION` only if those are unset) for 3600 seconds. That stamp is **mistake-prevention, not a sandbox**. `--exec-spawn` with `--briefing` is **Grok only**: it runs the stamped `claude -p` line and records. Do not invent `claude -p`. `--print-spawn` inspects that line. Cursor and Claude Code spawn with Task/Agent. `--record`, `--print-spawn`, and `--exec-spawn` exit 2 if the stamp is missing, stale, from another session, or already used. Manual `--record` needs `--spawn-line` from `--print-spawn`. The same printed line cannot be recorded twice. After `--record`, run `--list` before another `--print-spawn`. Default is fable. Blocked pick is opus 4.6. `--report` is **usage history**. `--json` is for machines. Claude Code: `--install-hook` wires PreToolUse(Bash) `block-hand-claude-p.py`. Grok has no PreToolUse. Default eval is static. `EVAL_LIVE=1` only when asked.
 
 ```bash
 python3 scripts/resolve-consult.py --list --json
