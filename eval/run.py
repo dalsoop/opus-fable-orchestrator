@@ -279,12 +279,15 @@ def run() -> int:
             else:
                 host = data.get("host")
                 slug = data.get("slug") or ""
-                if host not in ("cursor", "claude", "codex", "unknown"):
+                if host not in ("cursor", "claude", "codex", "grok", "unknown"):
                     results.append(fail(sid, f"bad host {host!r}"))
                 elif "fable" not in slug.lower():
                     results.append(fail(sid, f"slug not fable: {slug!r}"))
                 else:
                     results.append(ok(sid, f"{host}:{slug}"))
+        elif sc["expect"] == "skill_fable_is_critic":
+            miss = [n for n in EVAL.get("critic_needles", []) if n not in skill_text]
+            results.append(fail(sid, f"missing={miss}") if miss else ok(sid))
         elif sc["expect"] == "skill_mentions_observability":
             miss = [n for n in EVAL.get("observability_needles", ["--record", "fallback_slug"]) if n not in skill_text]
             results.append(fail(sid, f"missing={miss}") if miss else ok(sid))

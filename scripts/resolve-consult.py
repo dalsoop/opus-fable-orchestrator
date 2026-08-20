@@ -2,7 +2,7 @@
 """Print a host-native model slug for a read-only consult child.
 
 Family id: agent-model-registry `get fable` (fallback `claude-fable-5`).
-Host: CONSULT_HOST, else this session (CURSOR_AGENT / CLAUDECODE / Codex).
+Host: CONSULT_HOST, else this session (CURSOR_AGENT / CLAUDECODE / Codex / GROK_AGENT).
 Cursor Task slugs are used only when the host is Cursor. Never treat a
 random `agent` binary on PATH as Cursor.
 
@@ -23,7 +23,7 @@ from pathlib import Path
 
 FAMILY = "claude-fable-5"
 FALLBACK_NAME = "grok"
-HOSTS = ("cursor", "claude", "codex")
+HOSTS = ("cursor", "claude", "codex", "grok")
 RECEIPT = Path.home() / ".orchestrator-consultant-gate" / "receipts.jsonl"
 
 
@@ -48,6 +48,8 @@ def detect_host() -> str:
         return "claude"
     if os.environ.get("CODEX_THREAD_ID") or os.environ.get("CODEX_INTERNAL_ORIGINATOR_OVERRIDE"):
         return "codex"
+    if os.environ.get("GROK_AGENT") == "1" or os.environ.get("GROK_SESSION_ID"):
+        return "grok"
     return "unknown"
 
 
@@ -125,10 +127,16 @@ def resolve(name: str, host: str, allow: list[str]) -> tuple[str | None, str]:
 
 def spawn_hint(host: str, slug: str) -> dict[str, str]:
     return {
-        "read_only": "no files, no tools",
+        "read_only": "no files, no tools; critic, not a second executor",
         "cursor": f'Task({{ description: "Consult", subagent_type: "generalPurpose", model: "{slug}", prompt: <briefing> }})',
         "claude": f'Agent({{ model: "{slug}", prompt: <briefing> }})',
         "codex": f"-m {slug}",
+        "grok": (
+            f'spawn_subagent({{ description: "Consult", subagent_type: "general-purpose", '
+            f'model: "{slug}", prompt: <briefing> }}). '
+            f'If the host cannot spawn that slug, blocked → fallback_slug. '
+            f'Fable: `claude -p --model {slug} --max-turns 1` when Claude CLI can run the critic.'
+        ),
         "host": host,
     }
 
@@ -140,6 +148,7 @@ def payload(name: str, host: str, allow: list[str]) -> dict:
         "registry": rid,
         "slug": slug,
         "name": name,
+        "role": "critic",
         "allow_count": len(allow),
         "read_only": True,
         "spawn": spawn_hint(host, slug),
