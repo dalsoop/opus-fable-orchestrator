@@ -1,12 +1,12 @@
 ---
 name: orchestrator-consultant-gate-ko
-version: 1.25.0
+version: 1.26.0
 kind: skill
 license: MIT
 compatibility: 읽기 전용 하위 에이전트를 띄울 수 있는 호스트(Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.25.0"
+  version: "1.26.0"
   locale: ko
 description: >-
   업무 지시 뒤, 전수조사해서 바꾸기 전에 계획을 읽기 전용으로 검수받는다. 지금
@@ -51,10 +51,11 @@ spawn이 막히면 폴백을 한 번 하거나 건너뛴다. 건너뛴 게이트
 
 ## 검수
 
-세션 유지. **필수 — 이번 턴, spawn 전**에 `--list --json`. `selectable`인 이름을 고른다. 목록 없이 spawn하지 않는다. `--list`는 이번 세션(`CONSULT_SESSION`, 없으면 `GROK_SESSION_ID` / `CLAUDE_SESSION`)에 3600초 동안 찍힌다. 그 스탬프는 **실수 방지이지 샌드박스가 아니다.** 다른 프로세스가 `CONSULT_SESSION`을 넣을 수 있다. `--print-spawn`은 **Grok만**. Cursor와 Claude Code는 Task/Agent로 spawn한다. 스탬프가 없거나, 만료됐거나, 다른 세션이면 `--record`와 `--print-spawn`은 종료 코드 2. `--record`는 이번 턴 `--print-spawn` 표준출력과 같은 `--spawn-line`이 필요하다. 같은 출력 줄은 두 번 기록하지 못한다. `--record` 뒤에는 다시 `--print-spawn` 하기 전에 `--list`를 한다. 기본은 페이블. 막히면 opus 4.6. `--report`는 **사용 이력**(spawn 원장)이지 검수 품질이 아니다. 기본 `python3 eval/run.py`는 정적이다. 사용자가 라이브 검수를 요청했을 때만 `EVAL_LIVE=1`. 라이브는 토큰을 쓴다. `EVAL_LIVE=1`이 없으면 라이브 하네스는 spawn하지 않는다.
+세션 유지. **필수 — 이번 턴, spawn 전**에 `--list --json`. `selectable`인 이름을 고른다. `--list`는 호스트 세션(`GROK_SESSION_ID` / `CLAUDE_SESSION`, 둘 다 없을 때만 `CONSULT_SESSION`)에 3600초 동안 찍힌다. 그 스탬프는 **실수 방지이지 샌드박스가 아니다.** `--exec-spawn`에 `--briefing`을 주는 것은 **Grok만**. 찍힌 `claude -p`를 실행하고 기록한다. 손으로 `claude -p`를 만들지 않는다. `--print-spawn`은 그 줄을 보여 준다. Cursor와 Claude Code는 Task/Agent로 spawn한다. 스탬프가 없거나, 만료됐거나, 다른 세션이거나, 이미 썼으면 `--record`, `--print-spawn`, `--exec-spawn`은 종료 코드 2. 수동 `--record`는 `--print-spawn`과 같은 `--spawn-line`이 필요하다. 같은 출력 줄은 두 번 기록하지 못한다. `--record` 뒤에는 다시 `--print-spawn` 하기 전에 `--list`를 한다. 기본은 페이블. 막히면 opus 4.6. `--report`는 **사용 이력**. `--json`은 기계용. 기본 eval은 정적이다. `EVAL_LIVE=1`은 요청했을 때만.
 
 ```bash
 python3 scripts/resolve-consult.py --list --json
+python3 scripts/resolve-consult.py --exec-spawn --briefing templates/fable-briefing.md
 python3 scripts/resolve-consult.py --print-spawn
 python3 scripts/resolve-consult.py --report --json
 python3 scripts/resolve-consult.py --json
@@ -66,13 +67,13 @@ python3 scripts/resolve-consult.py --name opus --json
 
 `--json` → `{host, registry, slug, name, fallbacks, fallback_slug, spawn, read_only}`. 첫 `fallback_slug`는 opus 4.6. grok는 이번 턴 덮어쓰기만. `CONSULT_HOST`: cursor|claude|codex|grok. `slug`를 쓴다. 스킬에 모델 id를 복사하지 않는다. Cursor만 Task slug(`thinking-high`가 목록에 있으면). `--name opus`는 레지스트리 opus **4.6**, 호스트가 받으면 `[1m]`(`generation_ok`). Claude/Codex/Grok에서 `cursor --list-models` 금지. CLI 없으면 스크립트가 그 계열을 찍음. Grok TUI는 `GROK_AGENT=1`.
 
-자식이 **막히면**(Cursor Review Data Policy, HTTP 402, Grok가 페이블을 못 띄움): `--list`에서 opus를 한 번 고른다(`generation_ok`). grok를 먼저 쓰지 않는다. 아니면 건너뛰고 다음 게이트. 멈추지 말 것. Grok는 `--list` 다음 `--print-spawn`이 찍은 한 줄만 실행한다. 손으로 `claude -p`를 만들지 않는다.
+자식이 **막히면**(Cursor Review Data Policy, HTTP 402, Grok가 페이블을 못 띄움): `--list`에서 opus를 한 번 고른다(`generation_ok`). grok를 먼저 쓰지 않는다. 아니면 건너뛰고 다음 게이트. 멈추지 말 것. Grok는 `--list` 다음 `--exec-spawn --briefing`을 실행한다. 손으로 `claude -p`를 만들지 않는다.
 
 `templates/` 는 뼈대다. **부모 에이전트**가 채운다. 사람이 게이트 전에 쓰지 않는다.
 
 `templates/fable-briefing.md`에 실행 문서를 넣는다(증거 ≠ 해석). 자식에게: 이 계획의 검수자이지 두 번째 실행자가 아니다. 동의하지 마라. 계획을 다시 짜지 마라. 반박 + 닫힌 3–5 + 열린 1: "내가 놓친 카테고리는?" 비밀 금지. `페이블 검수받아봐` / `페이블로 검수해봐` / `페이블 검수` / `페이블 자문` / `fable 자문`은 트리거.
 
-Cursor: `Task({ description: "Consult", subagent_type: "generalPurpose", model: "<slug>", prompt: <브리핑> })`. Task가 막히면 `--list`에서 opus를 고른다. grok를 먼저 쓰지 않는다. Claude Code: `Agent({ model: "<slug>", ... })`. Codex: `-m <slug>`. Grok: `--print-spawn` 표준출력을 실행한다. slug가 Grok 모델이 아니면 `spawn_subagent`로 시작하지 않는다. 도구 호출 지시 → reject. Timeout → 진행, 다음 게이트에서 재시도.
+Cursor: `Task({ description: "Consult", subagent_type: "generalPurpose", model: "<slug>", prompt: <브리핑> })`. Task가 막히면 `--list`에서 opus를 고른다. grok를 먼저 쓰지 않는다. Claude Code: `Agent({ model: "<slug>", ... })`. Codex: `-m <slug>`. Grok: `--exec-spawn --briefing`. slug가 Grok 모델이 아니면 `spawn_subagent`로 시작하지 않는다. 도구 호출 지시 → reject. Timeout → 진행, 다음 게이트에서 재시도.
 
 ## 소화
 

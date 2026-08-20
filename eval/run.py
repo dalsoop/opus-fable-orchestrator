@@ -51,6 +51,20 @@ def ok(sid: str, detail: str = "") -> dict:
     return {"id": sid, "ok": True, "detail": detail}
 
 
+def consult_env(tmp: str, session: str | None = None, grok_session: str | None = None) -> dict:
+    env = {**os.environ, "ORCHESTRATOR_CONSULT_HOME": tmp}
+    env.pop("CLAUDE_SESSION", None)
+    if grok_session is None:
+        env.pop("GROK_SESSION_ID", None)
+    else:
+        env["GROK_SESSION_ID"] = grok_session
+    if session is None:
+        env.pop("CONSULT_SESSION", None)
+    else:
+        env["CONSULT_SESSION"] = session
+    return env
+
+
 def run() -> int:
     skill_text = (ROOT / "SKILL.md").read_text(encoding="utf-8")
     fm = frontmatter(skill_text)
@@ -468,7 +482,7 @@ def run() -> int:
 
             script = ROOT / "scripts" / "resolve-consult.py"
             with tempfile.TemporaryDirectory() as tmp:
-                env = {**os.environ, "ORCHESTRATOR_CONSULT_HOME": tmp}
+                env = consult_env(tmp)
                 denied = subprocess.run(
                     [sys.executable, str(script), "--record", "--ok", "--read-only"],
                     capture_output=True,
@@ -512,7 +526,7 @@ def run() -> int:
 
             script = ROOT / "scripts" / "resolve-consult.py"
             with tempfile.TemporaryDirectory() as tmp:
-                env = {**os.environ, "ORCHESTRATOR_CONSULT_HOME": tmp, "CONSULT_SESSION": "eval-print-spawn"}
+                env = consult_env(tmp, session="eval-print-spawn")
                 denied = subprocess.run(
                     [sys.executable, str(script), "--print-spawn"],
                     capture_output=True,
@@ -555,8 +569,8 @@ def run() -> int:
 
             script = ROOT / "scripts" / "resolve-consult.py"
             with tempfile.TemporaryDirectory() as tmp:
-                env_a = {**os.environ, "ORCHESTRATOR_CONSULT_HOME": tmp, "CONSULT_SESSION": "sess-a"}
-                env_b = {**os.environ, "ORCHESTRATOR_CONSULT_HOME": tmp, "CONSULT_SESSION": "sess-b"}
+                env_a = consult_env(tmp, session="sess-a")
+                env_b = consult_env(tmp, session="sess-b")
                 listed = subprocess.run(
                     [sys.executable, str(script), "--list", "--json"],
                     capture_output=True,
@@ -591,7 +605,7 @@ def run() -> int:
 
             script = ROOT / "scripts" / "resolve-consult.py"
             with tempfile.TemporaryDirectory() as tmp:
-                env = {**os.environ, "ORCHESTRATOR_CONSULT_HOME": tmp, "CONSULT_SESSION": "eval-stale"}
+                env = consult_env(tmp, session="eval-stale")
                 listed = subprocess.run(
                     [sys.executable, str(script), "--list", "--json"],
                     capture_output=True,
@@ -632,7 +646,7 @@ def run() -> int:
 
             script = ROOT / "scripts" / "resolve-consult.py"
             with tempfile.TemporaryDirectory() as tmp:
-                env = {**os.environ, "ORCHESTRATOR_CONSULT_HOME": tmp, "CONSULT_SESSION": "eval-spawn-line"}
+                env = consult_env(tmp, session="eval-spawn-line")
                 listed = subprocess.run(
                     [sys.executable, str(script), "--list", "--json"],
                     capture_output=True,
@@ -700,6 +714,83 @@ def run() -> int:
                             results.append(fail(sid, f"print-spawn after record rc={reprint.returncode}"))
                         else:
                             results.append(ok(sid, "missing/wrong/replay/reprint=2 match=0"))
+        elif sc["expect"] == "exec_spawn_requires_list":
+            import subprocess
+            import tempfile
+
+            script = ROOT / "scripts" / "resolve-consult.py"
+            with tempfile.TemporaryDirectory() as tmp:
+                env = consult_env(tmp, session="eval-exec-spawn")
+                denied = subprocess.run(
+                    [sys.executable, str(script), "--exec-spawn", "--dry-run"],
+                    capture_output=True,
+                    text=True,
+                    env=env,
+                )
+                listed = subprocess.run(
+                    [sys.executable, str(script), "--list", "--json"],
+                    capture_output=True,
+                    text=True,
+                    env=env,
+                )
+                dry = subprocess.run(
+                    [sys.executable, str(script), "--exec-spawn", "--dry-run"],
+                    capture_output=True,
+                    text=True,
+                    env=env,
+                )
+                live_no_file = subprocess.run(
+                    [sys.executable, str(script), "--exec-spawn"],
+                    capture_output=True,
+                    text=True,
+                    env=env,
+                )
+                line = (dry.stdout or "").strip()
+                if denied.returncode != 2:
+                    results.append(fail(sid, f"no-list rc={denied.returncode}"))
+                elif listed.returncode != 0 or dry.returncode != 0:
+                    results.append(fail(sid, f"list/dry rc {listed.returncode}/{dry.returncode}"))
+                elif not line.startswith("claude -p --model ") or "--max-turns 1" not in line:
+                    results.append(fail(sid, f"bad dry line {line!r}"))
+                elif live_no_file.returncode != 2:
+                    results.append(fail(sid, f"no briefing rc={live_no_file.returncode}"))
+                else:
+                    results.append(ok(sid, line))
+        elif sc["expect"] == "session_host_owned":
+            import subprocess
+            import tempfile
+
+            script = ROOT / "scripts" / "resolve-consult.py"
+            with tempfile.TemporaryDirectory() as tmp:
+                env_a = consult_env(tmp, session="spoof", grok_session="host-a")
+                env_b = consult_env(tmp, session="spoof", grok_session="host-b")
+                env_same = consult_env(tmp, session="other", grok_session="host-a")
+                listed = subprocess.run(
+                    [sys.executable, str(script), "--list", "--json"],
+                    capture_output=True,
+                    text=True,
+                    env=env_a,
+                )
+                other_host = subprocess.run(
+                    [sys.executable, str(script), "--print-spawn"],
+                    capture_output=True,
+                    text=True,
+                    env=env_b,
+                )
+                same_host = subprocess.run(
+                    [sys.executable, str(script), "--print-spawn"],
+                    capture_output=True,
+                    text=True,
+                    env=env_same,
+                )
+                if listed.returncode != 0:
+                    results.append(fail(sid, f"list rc={listed.returncode}"))
+                elif other_host.returncode != 2:
+                    results.append(fail(sid, f"other host rc={other_host.returncode}"))
+                elif same_host.returncode != 0:
+                    results.append(fail(sid, f"CONSULT_SESSION spoof rc={same_host.returncode}"))
+                else:
+                    results.append(ok(sid, "host-owned ignores CONSULT_SESSION"))
         elif sc["expect"] == "locale_shared_procedure":
             needles = EVAL.get("locale_shared_needles") or []
             loc = EVAL.get("locale")
@@ -779,17 +870,22 @@ def run() -> int:
             other = ROOT.parent / (
                 "orchestrator-consultant-gate-ko" if loc == "en" else "orchestrator-consultant-gate"
             )
-            here = ROOT / "scripts" / "resolve-consult.py"
-            there = other / "scripts" / "resolve-consult.py"
-            if not there.is_file():
+            pairs = [
+                (ROOT / "scripts" / "resolve-consult.py", other / "scripts" / "resolve-consult.py"),
+                (ROOT / "eval" / "run.py", other / "eval" / "run.py"),
+            ]
+            if not pairs[0][1].is_file():
                 results.append({"id": sid, "ok": True, "detail": "skipped (no sibling checkout)", "skipped": True})
             else:
-                a = hashlib.sha256(here.read_bytes()).hexdigest()
-                b = hashlib.sha256(there.read_bytes()).hexdigest()
-                if a != b:
-                    results.append(fail(sid, f"resolve-consult.py drifted {a[:8]} != {b[:8]}"))
-                else:
-                    results.append(ok(sid, a[:12]))
+                drift = []
+                last = ""
+                for here, there in pairs:
+                    a = hashlib.sha256(here.read_bytes()).hexdigest()
+                    b = hashlib.sha256(there.read_bytes()).hexdigest()
+                    last = a[:12]
+                    if a != b:
+                        drift.append(f"{here.name} {a[:8]}!={b[:8]}")
+                results.append(fail(sid, ",".join(drift)) if drift else ok(sid, last))
         elif sc["expect"] == "eval_live_gated":
             src = (ROOT / "eval" / "run.py").read_text(encoding="utf-8")
             if 'sc.get("harness") == "live" and not live' not in src:
