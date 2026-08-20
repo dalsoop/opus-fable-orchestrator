@@ -426,11 +426,13 @@ def main() -> int:
             )
             return 2
         line = claude_spawn_line(slug)
+        if (load_list_stamp() or {}).get("spawn_used"):
+            print("run --list first; spawn-line already recorded", file=sys.stderr)
+            return 2
         if not patch_stamp(
             spawn_line=line,
             spawn_hash=line_hash(line),
             spawn_name=args.name.lower(),
-            spawn_used=False,
         ):
             print("run --list first this turn", file=sys.stderr)
             return 2

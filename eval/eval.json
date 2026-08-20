@@ -67,6 +67,7 @@
     { "id": "record-requires-spawn-line", "type": "error", "expect": "record_requires_spawn_line" },
     { "id": "locale-shared-procedure", "type": "roundtrip", "expect": "locale_shared_procedure" },
     { "id": "locale-procedure-order", "type": "roundtrip", "expect": "locale_procedure_order" },
+    { "id": "locale-flag-sequence", "type": "roundtrip", "expect": "locale_flag_sequence" },
     { "id": "sibling-script-same", "type": "roundtrip", "expect": "sibling_script_same" },
     { "id": "eval-live-gated", "type": "error", "expect": "eval_live_gated" },
     { "id": "observability", "type": "roundtrip", "expect": "skill_mentions_observability" },
