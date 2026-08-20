@@ -27,6 +27,18 @@
       "checks": { "preserve_tokens": ["자문"] }
     },
     {
+      "id": "happy-05-spoken-geomsu",
+      "should_trigger": true,
+      "prompt": "페이블로 검수해봐. 업무 지시 뒤 전수조사해서 바꾸기 전이야",
+      "checks": { "preserve_tokens": ["자문"] }
+    },
+    {
+      "id": "happy-06-spoken-bada",
+      "should_trigger": true,
+      "prompt": "페이블 검수받아봐. 실행 문서 게이트 돌려",
+      "checks": { "preserve_tokens": ["자문"] }
+    },
+    {
       "id": "neg-01-grep",
       "should_trigger": false,
       "prompt": "TODO grep 해줘",

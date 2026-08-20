@@ -11,7 +11,11 @@
     "자문 받아와",
     "페이블 자문",
     "전수조사",
-    "업무 지시"
+    "업무 지시",
+    "페이블 검수받아봐",
+    "페이블로 검수해봐",
+    "페이블 검수",
+    "페이블로 검수"
   ],
   "override_needles": ["resolve-consult.py", "claude-fable-5"],
   "triggers_forbidden": ["expert consult", "second opinion"],
@@ -21,7 +25,7 @@
   "observability_needles": ["--record", "fallback_slug", "GROK_AGENT", "spawn_subagent"],
   "parent_needles": ["부모를 바꾸지 않는다", "Grok", "Codex"],
   "parent_forbidden": [],
-  "critic_needles": ["검수자는 페이블", "부모 에이전트", "동의하지 마라", "오케스트레이션에 착수하기 전", "정답이 아니다"],
+  "critic_needles": ["검수자는 페이블", "부모 에이전트", "동의하지 마라", "오케스트레이션에 착수하기 전", "정답이 아니다", "사용자가 영어면", "이 사본을 실행하지 않는다", "브랜치 `main`", "자식에게 넘기기 전", "거짓 확신"],
   "scenarios": [
     { "id": "version-sync", "type": "version", "expect": "VERSION_matches_frontmatter" },
     { "id": "locale-ko", "type": "trigger", "expect": "description_has_required_not_forbidden" },
