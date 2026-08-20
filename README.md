@@ -7,6 +7,7 @@ English (`main`). Korean: branch [`ko`](https://github.com/dalsoop/orchestrator-
 ```bash
 npx skills add dalsoop/orchestrator-consultant-gate -g -y
 python3 scripts/resolve-consult.py --list --json
+python3 scripts/resolve-consult.py --print-spawn
 python3 scripts/resolve-consult.py --report --json
 python3 scripts/resolve-consult.py --json
 python3 eval/run.py
@@ -23,7 +24,7 @@ Korean: `npx skills add dalsoop/orchestrator-consultant-gate@ko -g -y`
 
 One AI writes the **execution document** from the work order. **GATE** before orchestration and before audit-then-change. Fable **rebuts** it read-only: one more missed bottleneck, a hole in a child prompt, an omitted category. Notes go back. Same session. The payoff is **before dispatch**, in that document, not at merge. Claims are probabilistic. Digest them. Do not treat them as answers.
 
-Pick the critic from `--list`. Default is Fable (`agent-model-registry get fable`). Spawn the `slug` from `--json`. If Fable is blocked, pick opus 4.6 from the list, not grok. `--report` is usage history, not critic quality. Grok first path is `claude -p`, not `spawn_subagent`. Default eval is static; `EVAL_LIVE=1` only when asked. Hosts: Cursor, Claude Code, Codex, Grok TUI (`GROK_AGENT=1`). The session agent fills `templates/` at the gate.
+Pick the critic from `--list`. Default is Fable (`agent-model-registry get fable`). Spawn the `slug` from `--json`. If Fable is blocked, pick opus 4.6 from the list, not grok. `--report` is usage history, not critic quality. Grok: `--print-spawn` after `--list`; do not invent `claude -p`. Default eval is static; `EVAL_LIVE=1` only when asked. Hosts: Cursor, Claude Code, Codex, Grok TUI (`GROK_AGENT=1`). The session agent fills `templates/` at the gate.
 
 [`SKILL.md`](SKILL.md) · [`templates/`](templates/) · [`scripts/`](scripts/) · [`eval/`](eval/) · MIT
 

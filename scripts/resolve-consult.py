@@ -28,7 +28,10 @@ FALLBACK_NAMES = ("opus", "grok")
 OPUS_GEN = "opus-4-6"
 WINDOW_1M = "[1m]"
 HOSTS = ("cursor", "claude", "codex", "grok")
-RECEIPT = Path.home() / ".orchestrator-consultant-gate" / "receipts.jsonl"
+STATE = Path(os.environ.get("ORCHESTRATOR_CONSULT_HOME", str(Path.home() / ".orchestrator-consultant-gate")))
+RECEIPT = STATE / "receipts.jsonl"
+LIST_STAMP = STATE / "last-list.json"
+LIST_MAX_AGE_SEC = 3600
 
 
 def registry_get(name: str) -> str | None:
@@ -214,6 +217,58 @@ def list_critics(host: str, allow: list[str]) -> dict:
     return {"host": host, "role": "critic", "critics": critics}
 
 
+def session_id() -> str:
+    return (
+        os.environ.get("CONSULT_SESSION")
+        or os.environ.get("GROK_SESSION_ID")
+        or os.environ.get("CLAUDE_SESSION")
+        or "default"
+    )
+
+
+def save_list_stamp(data: dict) -> None:
+    STATE.mkdir(parents=True, exist_ok=True)
+    stamp = {
+        "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "host": data.get("host"),
+        "session": session_id(),
+        "names": [c["name"] for c in data.get("critics") or [] if c.get("selectable")],
+    }
+    LIST_STAMP.write_text(json.dumps(stamp), encoding="utf-8")
+
+
+def load_list_stamp() -> dict | None:
+    if not LIST_STAMP.is_file():
+        return None
+    try:
+        stamp = json.loads(LIST_STAMP.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    raw = stamp.get("ts") or ""
+    try:
+        ts = datetime.strptime(raw, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+    age = (datetime.now(timezone.utc) - ts).total_seconds()
+    if age > LIST_MAX_AGE_SEC:
+        return None
+    if stamp.get("session") != session_id():
+        return None
+    return stamp
+
+
+def require_listed(name: str) -> bool:
+    stamp = load_list_stamp()
+    if not stamp:
+        print("run --list first this turn", file=sys.stderr)
+        return False
+    names = stamp.get("names") or []
+    if name.lower() not in names:
+        print(f"{name} not selectable in last --list", file=sys.stderr)
+        return False
+    return True
+
+
 def report_receipts() -> dict:
     rows: list[dict] = []
     if RECEIPT.is_file():
@@ -307,11 +362,13 @@ def main() -> int:
     ap.add_argument("--ok", action="store_true")
     ap.add_argument("--read-only", action="store_true")
     ap.add_argument("--fallback-used", action="store_true")
+    ap.add_argument("--print-spawn", action="store_true", help="print Grok claude -p line; requires --list")
     args = ap.parse_args()
     host = detect_host()
     allow = allowlist(host)
     if args.list:
         data = list_critics(host, allow)
+        save_list_stamp(data)
         if args.json:
             print(json.dumps(data))
         else:
@@ -335,7 +392,24 @@ def main() -> int:
                 )
         return 0
     data = payload(args.name, host, allow)
+    stamp = load_list_stamp()
+    data["list_ok"] = bool(stamp) and args.name.lower() in (stamp.get("names") or [])
+    if args.print_spawn:
+        if not require_listed(args.name):
+            return 2
+        first = (data.get("spawn") or {}).get("first")
+        slug = data["slug"]
+        if first != "claude -p":
+            print(
+                f"spawn_first={first!r}; --print-spawn is only for fable/opus. pick a listed name",
+                file=sys.stderr,
+            )
+            return 2
+        print(f"claude -p --model {slug} --max-turns 1")
+        return 0
     if args.record:
+        if not require_listed(args.name):
+            return 2
         rec = {
             "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "host": data["host"],
@@ -345,6 +419,7 @@ def main() -> int:
             "fallback_used": args.fallback_used,
             "spawn_ok": args.ok,
             "read_only": args.read_only,
+            "listed": True,
         }
         path = record(rec)
         if args.json:
