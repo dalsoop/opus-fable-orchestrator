@@ -8,7 +8,7 @@
 npx skills add dalsoop/orchestrator-consultant-gate@ko -g -y
 python3 scripts/resolve-consult.py --json
 python3 eval/run.py
-EVAL_LIVE=1 python3 eval/run.py
+EVAL_LIVE=1 python3 eval/run.py   # Cursor/Claude spawn. Grok는 claude -p --max-turns 1.
 ```
 
 `npx`는 **파일**만 복사한다. 두 번째 의견은 **호스트**가 자식을 spawn 해야 한다. 설치만으로 E2E가 아니다.
@@ -27,4 +27,4 @@ EVAL_LIVE=1 python3 eval/run.py
 
 [![skills.sh](https://skills.sh/b/dalsoop/orchestrator-consultant-gate)](https://skills.sh/dalsoop/orchestrator-consultant-gate)
 
-`host-skills` 카탈로그 밖. 선택: `agent-model-registry set fable <id>`.
+host-skills-mono에 `orchestrator-consultant-gate-ko`로 들어 있다(배포: personal-mac). 공개 설치는 여전히 `npx skills add`. 선택: `agent-model-registry set fable <id>`.
