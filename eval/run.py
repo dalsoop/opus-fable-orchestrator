@@ -125,13 +125,19 @@ def run() -> int:
                         slug = data.get("slug") or ""
                         host = data.get("host") or ""
                         want = EVAL.get("fable_model_slug", "claude-fable-5")
-                        fb = (data.get("fallback_slug") or "").lower()
+                        fbs = {x.get("name"): x for x in (data.get("fallbacks") or []) if isinstance(x, dict)}
+                        opus = fbs.get("opus") or {}
+                        opus_id = ((opus.get("registry") or opus.get("slug") or "") + "").lower().replace(".", "-")
                         if "host" not in data:
                             results.append(fail(sid, "json missing host"))
-                        elif want and want not in slug:
+                        elif want and want not in slug and "fable" not in slug.lower():
                             results.append(fail(sid, f"slug {slug!r} missing {want!r}"))
-                        elif "grok" not in fb:
-                            results.append(fail(sid, f"fallback_slug {data.get('fallback_slug')!r}"))
+                        elif "grok" not in fbs:
+                            results.append(fail(sid, f"fallbacks missing grok: {data.get('fallbacks')!r}"))
+                        elif "opus" not in fbs:
+                            results.append(fail(sid, f"fallbacks missing opus: {data.get('fallbacks')!r}"))
+                        elif "opus-4-6" not in opus_id and opus.get("generation_ok") is not True:
+                            results.append(fail(sid, f"opus is not 4.6: {opus!r}"))
                         elif not data.get("spawn") or not data.get("read_only"):
                             results.append(fail(sid, "json missing spawn/read_only"))
                         else:
@@ -142,11 +148,20 @@ def run() -> int:
             else:
                 results.append(ok(sid))
         elif sc["expect"] == "skill_contains_fable_slug":
-            slug = EVAL.get("fable_model_slug", "")
-            if slug not in skill_text:
-                results.append(fail(sid, f"SKILL.md missing Task slug {slug!r}"))
+            import subprocess
+
+            script = ROOT / "scripts" / "resolve-consult.py"
+            p = subprocess.run([sys.executable, str(script), "--json"], capture_output=True, text=True)
+            try:
+                data = json.loads(p.stdout)
+            except json.JSONDecodeError:
+                results.append(fail(sid, f"resolve not json: {p.stdout!r}"))
             else:
-                results.append(ok(sid))
+                slug = data.get("slug") or ""
+                if "fable" not in slug.lower():
+                    results.append(fail(sid, f"resolve slug not fable: {slug!r}"))
+                else:
+                    results.append(ok(sid, slug))
         elif sc["expect"] == "skill_allows_consult_override":
             miss = [n for n in EVAL.get("override_needles", []) if n not in skill_text]
             results.append(fail(sid, f"missing={miss}") if miss else ok(sid))

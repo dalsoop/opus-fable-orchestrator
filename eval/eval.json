@@ -15,17 +15,19 @@
     "페이블 검수받아봐",
     "페이블로 검수해봐",
     "페이블 검수",
-    "페이블로 검수"
+    "페이블로 검수",
+    "opus 4.6",
+    "opus 4.6 검수"
   ],
-  "override_needles": ["resolve-consult.py", "claude-fable-5"],
+  "override_needles": ["resolve-consult.py", "--name opus"],
   "triggers_forbidden": ["expert consult", "second opinion"],
   "briefing_sections": ["원시 증거", "내 해석", "내 결론", "질문"],
   "open_question": "내가 놓친 카테고리는?",
   "timeout_needles": ["Timeout", "재시도"],
-  "observability_needles": ["--record", "fallback_slug", "GROK_AGENT", "spawn_subagent"],
+  "observability_needles": ["--record", "fallback_slug", "fallbacks", "GROK_AGENT", "spawn_subagent"],
   "parent_needles": ["부모를 바꾸지 않는다", "Grok", "Codex"],
   "parent_forbidden": [],
-  "critic_needles": ["검수자는 페이블", "부모 에이전트", "동의하지 마라", "오케스트레이션에 착수하기 전", "정답이 아니다", "사용자가 영어면", "이 사본을 실행하지 않는다", "브랜치 `main`", "자식에게 넘기기 전", "거짓 확신"],
+  "critic_needles": ["검수자는 페이블", "부모 에이전트", "동의하지 마라", "오케스트레이션에 착수하기 전", "정답이 아니다", "사용자가 영어면", "이 사본을 실행하지 않는다", "브랜치 `main`", "자식에게 넘기기 전", "거짓 확신", "--name grok", "--name opus", "4.6"],
   "scenarios": [
     { "id": "version-sync", "type": "version", "expect": "VERSION_matches_frontmatter" },
     { "id": "locale-ko", "type": "trigger", "expect": "description_has_required_not_forbidden" },
