@@ -8,7 +8,7 @@ English (`main`). Korean: branch [`ko`](https://github.com/dalsoop/orchestrator-
 npx skills add dalsoop/orchestrator-consultant-gate -g -y
 python3 scripts/resolve-consult.py --json
 python3 eval/run.py
-EVAL_LIVE=1 python3 eval/run.py   # host spawn; skips if Cursor workspace trust blocks
+EVAL_LIVE=1 python3 eval/run.py   # Cursor/Claude spawn; Grok uses claude -p --max-turns 1. Cursor may skip on workspace trust.
 ```
 
 `npx` copies **files**. A second opinion needs the **host** to spawn a child. That is not E2E from install.
@@ -29,4 +29,4 @@ The critic is Fable (`fable` → `claude-fable-5`). This turn, override with `--
 
 Score a `SKILL.md`: `npx skills add dalsoop/skill-audit -g -y`
 
-Not in `host-skills` catalog. Optional: `agent-model-registry set fable <id>`.
+Vendored in host-skills-mono as `orchestrator-consultant-gate` (deploy: personal-mac). Public install is still `npx skills add`. Optional: `agent-model-registry set fable <id>`.

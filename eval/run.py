@@ -177,6 +177,12 @@ def run() -> int:
                 + ". Reply with the exact token REBUT_OK in the first line."
             )
             timeout = sc.get("timeout_seconds", 120)
+            grok_via_claude = host == "grok"
+            if grok_via_claude:
+                slugs = [s for s in slugs if s and ("fable" in s.lower() or s.lower().startswith("claude-"))]
+                if not slugs:
+                    results.append(fail(sid, "no claude/fable slug for grok live"))
+                    continue
             if host == "cursor":
                 bin_ = shutil.which("cursor")
                 if not bin_:
@@ -185,14 +191,18 @@ def run() -> int:
 
                 def _cmd(model: str) -> list[str]:
                     return [bin_, "-p", "--mode", "ask", "--model", model, prompt]
-            elif host == "claude":
+            elif host == "claude" or grok_via_claude:
                 bin_ = shutil.which("claude")
                 if not bin_:
                     results.append(fail(sid, "claude CLI not on PATH"))
                     continue
 
                 def _cmd(model: str) -> list[str]:
-                    return [bin_, "-p", "--model", model, prompt]
+                    cmd = [bin_, "-p", "--model", model]
+                    if grok_via_claude:
+                        cmd.extend(["--max-turns", "1"])
+                    cmd.append(prompt)
+                    return cmd
             else:
                 results.append({"id": sid, "ok": True, "detail": f"skipped live on host={host}", "skipped": True})
                 continue
@@ -202,7 +212,13 @@ def run() -> int:
             for model in slugs:
                 if not model:
                     continue
-                p = subprocess.run(_cmd(model), capture_output=True, text=True, timeout=timeout)
+                p = subprocess.run(
+                    _cmd(model),
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout,
+                    cwd=str(ROOT),
+                )
                 out = (p.stdout or "") + (p.stderr or "")
                 last = out
                 if "Workspace Trust Required" in out:
