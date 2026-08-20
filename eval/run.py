@@ -807,38 +807,47 @@ def run() -> int:
                         text=True,
                     )
 
-                denied = _hook(
-                    {
-                        "tool_name": "Bash",
-                        "tool_input": {"command": "claude -p --model claude-fable-5 --max-turns 1"},
-                    }
-                )
-                wrapped = _hook(
-                    {
-                        "tool_name": "Bash",
-                        "tool_input": {
-                            "command": "python3 scripts/resolve-consult.py --exec-spawn --briefing x.md"
-                        },
-                    }
-                )
-                other = _hook(
-                    {
-                        "tool_name": "Bash",
-                        "tool_input": {"command": "claude -p --model claude-sonnet-4-6"},
-                    }
-                )
-                agent = _hook({"tool_name": "Agent", "tool_input": {"prompt": "x"}})
-                deny_txt = denied.stdout or ""
-                if denied.returncode != 0 or "deny" not in deny_txt or "exec-spawn" not in deny_txt:
-                    results.append(fail(sid, f"hand-typed not denied {denied.stdout!r}"))
-                elif wrapped.returncode != 0 or (wrapped.stdout or "").strip():
-                    results.append(fail(sid, f"wrapper blocked {wrapped.stdout!r}"))
-                elif other.returncode != 0 or (other.stdout or "").strip():
-                    results.append(fail(sid, f"non-critic blocked {other.stdout!r}"))
-                elif agent.returncode != 0 or (agent.stdout or "").strip():
-                    results.append(fail(sid, f"Agent blocked {agent.stdout!r}"))
+                cases = [
+                    "claude -p --model claude-fable-5 --max-turns 1",
+                    "claude -p",
+                    "claude -p --model=claude-fable-5",
+                    "sh -c 'claude -p --model claude-fable-5'",
+                ]
+                denied_ok = True
+                detail_fail = ""
+                for cmd in cases:
+                    denied = _hook({"tool_name": "Bash", "tool_input": {"command": cmd}})
+                    deny_txt = denied.stdout or ""
+                    if denied.returncode != 0 or "deny" not in deny_txt or "exec-spawn" not in deny_txt:
+                        denied_ok = False
+                        detail_fail = f"not denied {cmd!r} {denied.stdout!r}"
+                        break
+                if not denied_ok:
+                    results.append(fail(sid, detail_fail))
                 else:
-                    results.append(ok(sid, "deny hand-typed critic claude -p"))
+                    wrapped = _hook(
+                        {
+                            "tool_name": "Bash",
+                            "tool_input": {
+                                "command": "python3 scripts/resolve-consult.py --exec-spawn --briefing x.md"
+                            },
+                        }
+                    )
+                    help_ok = _hook(
+                        {
+                            "tool_name": "Bash",
+                            "tool_input": {"command": "claude --help"},
+                        }
+                    )
+                    agent = _hook({"tool_name": "Agent", "tool_input": {"prompt": "x"}})
+                    if wrapped.returncode != 0 or (wrapped.stdout or "").strip():
+                        results.append(fail(sid, f"wrapper blocked {wrapped.stdout!r}"))
+                    elif help_ok.returncode != 0 or (help_ok.stdout or "").strip():
+                        results.append(fail(sid, f"claude --help blocked {help_ok.stdout!r}"))
+                    elif agent.returncode != 0 or (agent.stdout or "").strip():
+                        results.append(fail(sid, f"Agent blocked {agent.stdout!r}"))
+                    else:
+                        results.append(ok(sid, "deny corpus; wrapper/help/Agent ok"))
         elif sc["expect"] == "install_hook_settings":
             import subprocess
             import tempfile
@@ -870,7 +879,22 @@ def run() -> int:
                     elif 3 not in timeouts:
                         results.append(fail(sid, f"timeouts={timeouts}"))
                     else:
-                        results.append(ok(sid, "Bash PreToolUse timeout=3"))
+                        gone = subprocess.run(
+                            [sys.executable, str(script), "--uninstall-hook", "--json"],
+                            capture_output=True,
+                            text=True,
+                            env=env,
+                        )
+                        after = json.loads(settings.read_text(encoding="utf-8"))
+                        cmds2 = [
+                            h.get("command") or ""
+                            for g in (after.get("hooks", {}).get("PreToolUse") or [])
+                            for h in (g.get("hooks") or [])
+                        ]
+                        if gone.returncode != 0 or any("block-hand-claude-p.py" in c for c in cmds2):
+                            results.append(fail(sid, f"uninstall leftover {cmds2}"))
+                        else:
+                            results.append(ok(sid, "Bash PreToolUse timeout=3 uninstall ok"))
         elif sc["expect"] == "locale_shared_procedure":
             needles = EVAL.get("locale_shared_needles") or []
             loc = EVAL.get("locale")

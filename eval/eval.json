@@ -30,7 +30,7 @@
   "parent_forbidden": [],
   "locale_shared_needles": ["--print-spawn", "--spawn-line", "CONSULT_SESSION", "3600", "--list", "--record", "EVAL_LIVE", "4.6", "GROK_AGENT", "--exec-spawn", "--briefing", "PreToolUse", "block-hand-claude-p.py"],
   "locale_procedure_order": ["--list --json", "--exec-spawn", "--print-spawn", "--spawn-line"],
-  "critic_needles": ["검수자는 페이블", "부모 에이전트", "동의하지 마라", "오케스트레이션에 착수하기 전", "정답이 아니다", "사용자가 영어면", "이 사본을 실행하지 않는다", "브랜치 `main`", "자식에게 넘기기 전", "거짓 확신", "--name grok", "--name opus", "4.6", "spawn 전", "사용 이력", "EVAL_LIVE", "종료 코드 2", "--print-spawn", "CONSULT_SESSION", "3600", "--spawn-line", "Grok만", "샌드박스가 아니다", "두 번 기록하지 못한다", "--exec-spawn", "--briefing", "GROK_SESSION_ID", "--install-hook", "Grok에는 PreToolUse가 없다"],
+  "critic_needles": ["검수자는 페이블", "부모 에이전트", "동의하지 마라", "오케스트레이션에 착수하기 전", "정답이 아니다", "사용자가 영어면", "이 사본을 실행하지 않는다", "브랜치 `main`", "자식에게 넘기기 전", "거짓 확신", "--name grok", "--name opus", "4.6", "spawn 전", "사용 이력", "EVAL_LIVE", "종료 코드 2", "--print-spawn", "CONSULT_SESSION", "3600", "--spawn-line", "Grok만", "샌드박스가 아니다", "두 번 기록하지 못한다", "--exec-spawn", "--briefing", "GROK_SESSION_ID", "--install-hook", "Grok에는 PreToolUse가 없다", "--uninstall-hook"],
   "scenarios": [
     { "id": "version-sync", "type": "version", "expect": "VERSION_matches_frontmatter" },
     { "id": "locale-ko", "type": "trigger", "expect": "description_has_required_not_forbidden" },

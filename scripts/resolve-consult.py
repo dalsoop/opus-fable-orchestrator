@@ -326,6 +326,29 @@ def install_hook(settings: Path, script: Path) -> dict:
     return {"settings": str(settings), "script": str(script), "backup": str(bak) if bak else None}
 
 
+def uninstall_hook(settings: Path) -> dict:
+    if not settings.is_file():
+        return {"settings": str(settings), "removed": 0}
+    data = json.loads(settings.read_text(encoding="utf-8"))
+    pre = list((data.get("hooks") or {}).get("PreToolUse") or [])
+    kept = []
+    removed = 0
+    for grp in pre:
+        hs = [h for h in (grp.get("hooks") or []) if HOOK_NAME not in (h.get("command") or "")]
+        removed += len((grp.get("hooks") or [])) - len(hs)
+        if hs:
+            nxt = dict(grp)
+            nxt["hooks"] = hs
+            kept.append(nxt)
+        elif (grp.get("matcher") or "") != "Bash":
+            kept.append(grp)
+    if "hooks" not in data:
+        data["hooks"] = {}
+    data["hooks"]["PreToolUse"] = kept
+    settings.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return {"settings": str(settings), "removed": removed}
+
+
 def save_list_stamp(data: dict) -> None:
     STATE.mkdir(parents=True, exist_ok=True)
     stamp = {
@@ -468,13 +491,18 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true", help="with --exec-spawn, print the line and do not exec")
     ap.add_argument("--spawn-line", default="", help="exact --print-spawn stdout; required with --record")
     ap.add_argument("--install-hook", action="store_true", help="wire Claude Code PreToolUse(Bash); Grok has none")
+    ap.add_argument("--uninstall-hook", action="store_true", help="remove the PreToolUse(Bash) consult hook")
     args = ap.parse_args()
-    if args.install_hook:
+    if args.install_hook or args.uninstall_hook:
         settings = Path(
             os.environ.get("ORCHESTRATOR_CONSULT_HOOK_SETTINGS")
             or str(Path.home() / ".claude" / "settings.json")
         )
-        out = install_hook(settings, hook_script())
+        out = (
+            install_hook(settings, hook_script())
+            if args.install_hook
+            else uninstall_hook(settings)
+        )
         if args.json:
             print(json.dumps(out))
         else:

@@ -10,8 +10,10 @@ import json
 import re
 import sys
 
-CRITIC_MODEL = re.compile(r"--model\s+\S*(fable|opus-4-6|opus-4\.6)", re.I)
-PRINT_FLAG = re.compile(r"(?:^|[\s;|&])(?:\S+/)?claude(?:\s+\S+)*\s+(?:-p|--print)\b")
+PRINT_FLAG = re.compile(
+    r"(?:^|[\s;|&`'\"])(?:\S+/)?claude(?:\s+\S+)*\s+(?:-p|--print)(?:\s|=|$)",
+    re.I,
+)
 WRAPPER = "resolve-consult.py"
 
 
@@ -25,9 +27,9 @@ def decide(payload: dict) -> str | None:
     cmd = inp.get("command") or payload.get("command") or ""
     if not isinstance(cmd, str) or WRAPPER in cmd:
         return None
-    if PRINT_FLAG.search(cmd) and CRITIC_MODEL.search(cmd):
+    if PRINT_FLAG.search(cmd):
         return (
-            "Hand-typed critic claude -p is blocked. "
+            "Hand-typed claude -p is blocked. "
             "Use python3 scripts/resolve-consult.py --exec-spawn --briefing FILE"
         )
     return None
