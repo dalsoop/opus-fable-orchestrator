@@ -1,12 +1,12 @@
 ---
 name: orchestrator-consultant-gate-ko
-version: 1.32.0
+version: 1.32.1
 kind: skill
 license: MIT
 compatibility: 읽기 전용 하위 에이전트를 띄울 수 있는 호스트(Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.32.0"
+  version: "1.32.1"
   locale: ko
 description: >-
   클로드코드 답변이 장황, 읽기 힘들, 어떤 skill, 클로드코드 세팅, opus 5,

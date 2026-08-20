@@ -404,6 +404,8 @@ def install_claude(settings: Path, styles_dir: Path, force_style: bool) -> dict:
         sidecar["prev_model"] = prev_model
         sidecar["prev_outputStyle"] = prev_style
         sidecar["prev_env_opus"] = prev_env_opus
+    if "prev_env_opus" not in sidecar:
+        sidecar["prev_env_opus"] = prev_env_opus
     host = detect_host()
     rid, slug = resolve("opus", host, allowlist(host))
     data["model"] = slug
