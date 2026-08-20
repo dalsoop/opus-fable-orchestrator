@@ -29,6 +29,8 @@ FALLBACK_NAMES = ("opus", "grok")
 OPUS_GEN = "opus-4-6"
 WINDOW_1M = "[1m]"
 HOSTS = ("cursor", "claude", "codex", "grok")
+HOOK_NAME = "block-hand-claude-p.py"
+HOOK_TIMEOUT_S = 3
 STATE = Path(os.environ.get("ORCHESTRATOR_CONSULT_HOME", str(Path.home() / ".orchestrator-consultant-gate")))
 RECEIPT = STATE / "receipts.jsonl"
 LIST_STAMP = STATE / "last-list.json"
@@ -273,9 +275,55 @@ def exec_claude(line: str, briefing: Path) -> int:
     if not bin_:
         print("claude not on PATH", file=sys.stderr)
         return 2
+    env = {**os.environ, "CONSULT_EXEC": "1"}
     with briefing.open("r", encoding="utf-8") as stdin:
-        p = subprocess.run([bin_, *parts[1:]], stdin=stdin)
+        p = subprocess.run([bin_, *parts[1:]], stdin=stdin, env=env)
     return p.returncode
+
+
+def hook_script() -> Path:
+    installed = Path.home() / ".claude" / "skills" / "orchestrator-consultant-gate" / "scripts" / HOOK_NAME
+    if installed.is_file():
+        return installed.resolve()
+    return (Path(__file__).resolve().parent / HOOK_NAME).resolve()
+
+
+def install_hook(settings: Path, script: Path) -> dict:
+    settings.parent.mkdir(parents=True, exist_ok=True)
+    if settings.is_file():
+        data = json.loads(settings.read_text(encoding="utf-8"))
+    else:
+        data = {}
+    hooks = data.setdefault("hooks", {})
+    pre = list(hooks.get("PreToolUse") or [])
+    kept = []
+    for grp in pre:
+        hs = [h for h in (grp.get("hooks") or []) if HOOK_NAME not in (h.get("command") or "")]
+        if hs:
+            nxt = dict(grp)
+            nxt["hooks"] = hs
+            kept.append(nxt)
+        elif (grp.get("matcher") or "") != "Bash":
+            kept.append(grp)
+    kept.append(
+        {
+            "matcher": "Bash",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": f"python3 {script}",
+                    "timeout": HOOK_TIMEOUT_S,
+                }
+            ],
+        }
+    )
+    hooks["PreToolUse"] = kept
+    bak = None
+    if settings.is_file():
+        bak = settings.with_name(settings.name + ".bak-consult-hook")
+        bak.write_text(settings.read_text(encoding="utf-8"), encoding="utf-8")
+    settings.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return {"settings": str(settings), "script": str(script), "backup": str(bak) if bak else None}
 
 
 def save_list_stamp(data: dict) -> None:
@@ -419,7 +467,19 @@ def main() -> int:
     ap.add_argument("--briefing", default="", help="briefing file for --exec-spawn")
     ap.add_argument("--dry-run", action="store_true", help="with --exec-spawn, print the line and do not exec")
     ap.add_argument("--spawn-line", default="", help="exact --print-spawn stdout; required with --record")
+    ap.add_argument("--install-hook", action="store_true", help="wire Claude Code PreToolUse(Bash); Grok has none")
     args = ap.parse_args()
+    if args.install_hook:
+        settings = Path(
+            os.environ.get("ORCHESTRATOR_CONSULT_HOOK_SETTINGS")
+            or str(Path.home() / ".claude" / "settings.json")
+        )
+        out = install_hook(settings, hook_script())
+        if args.json:
+            print(json.dumps(out))
+        else:
+            print(out["settings"])
+        return 0
     host = detect_host()
     allow = allowlist(host)
     if args.list:

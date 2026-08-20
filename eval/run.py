@@ -791,6 +791,86 @@ def run() -> int:
                     results.append(fail(sid, f"CONSULT_SESSION spoof rc={same_host.returncode}"))
                 else:
                     results.append(ok(sid, "host-owned ignores CONSULT_SESSION"))
+        elif sc["expect"] == "hook_blocks_hand_claude_p":
+            import subprocess
+
+            hook = ROOT / "scripts" / "block-hand-claude-p.py"
+            if not hook.is_file():
+                results.append(fail(sid, "missing scripts/block-hand-claude-p.py"))
+            else:
+
+                def _hook(payload: dict):
+                    return subprocess.run(
+                        [sys.executable, str(hook)],
+                        input=json.dumps(payload),
+                        capture_output=True,
+                        text=True,
+                    )
+
+                denied = _hook(
+                    {
+                        "tool_name": "Bash",
+                        "tool_input": {"command": "claude -p --model claude-fable-5 --max-turns 1"},
+                    }
+                )
+                wrapped = _hook(
+                    {
+                        "tool_name": "Bash",
+                        "tool_input": {
+                            "command": "python3 scripts/resolve-consult.py --exec-spawn --briefing x.md"
+                        },
+                    }
+                )
+                other = _hook(
+                    {
+                        "tool_name": "Bash",
+                        "tool_input": {"command": "claude -p --model claude-sonnet-4-6"},
+                    }
+                )
+                agent = _hook({"tool_name": "Agent", "tool_input": {"prompt": "x"}})
+                deny_txt = denied.stdout or ""
+                if denied.returncode != 0 or "deny" not in deny_txt or "exec-spawn" not in deny_txt:
+                    results.append(fail(sid, f"hand-typed not denied {denied.stdout!r}"))
+                elif wrapped.returncode != 0 or (wrapped.stdout or "").strip():
+                    results.append(fail(sid, f"wrapper blocked {wrapped.stdout!r}"))
+                elif other.returncode != 0 or (other.stdout or "").strip():
+                    results.append(fail(sid, f"non-critic blocked {other.stdout!r}"))
+                elif agent.returncode != 0 or (agent.stdout or "").strip():
+                    results.append(fail(sid, f"Agent blocked {agent.stdout!r}"))
+                else:
+                    results.append(ok(sid, "deny hand-typed critic claude -p"))
+        elif sc["expect"] == "install_hook_settings":
+            import subprocess
+            import tempfile
+            from pathlib import Path as _Path
+
+            script = ROOT / "scripts" / "resolve-consult.py"
+            with tempfile.TemporaryDirectory() as tmp:
+                settings = _Path(tmp) / "settings.json"
+                env = {**os.environ, "ORCHESTRATOR_CONSULT_HOOK_SETTINGS": str(settings)}
+                installed = subprocess.run(
+                    [sys.executable, str(script), "--install-hook", "--json"],
+                    capture_output=True,
+                    text=True,
+                    env=env,
+                )
+                try:
+                    data = json.loads(settings.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError) as e:
+                    results.append(fail(sid, f"settings {e} rc={installed.returncode}"))
+                else:
+                    pres = data.get("hooks", {}).get("PreToolUse") or []
+                    bash = [g for g in pres if g.get("matcher") == "Bash"]
+                    cmds = [h.get("command") or "" for g in bash for h in (g.get("hooks") or [])]
+                    timeouts = [h.get("timeout") for g in bash for h in (g.get("hooks") or [])]
+                    if installed.returncode != 0:
+                        results.append(fail(sid, installed.stderr[-400:]))
+                    elif not any("block-hand-claude-p.py" in c for c in cmds):
+                        results.append(fail(sid, f"commands={cmds}"))
+                    elif 3 not in timeouts:
+                        results.append(fail(sid, f"timeouts={timeouts}"))
+                    else:
+                        results.append(ok(sid, "Bash PreToolUse timeout=3"))
         elif sc["expect"] == "locale_shared_procedure":
             needles = EVAL.get("locale_shared_needles") or []
             loc = EVAL.get("locale")
@@ -872,6 +952,7 @@ def run() -> int:
             )
             pairs = [
                 (ROOT / "scripts" / "resolve-consult.py", other / "scripts" / "resolve-consult.py"),
+                (ROOT / "scripts" / "block-hand-claude-p.py", other / "scripts" / "block-hand-claude-p.py"),
                 (ROOT / "eval" / "run.py", other / "eval" / "run.py"),
             ]
             if not pairs[0][1].is_file():
