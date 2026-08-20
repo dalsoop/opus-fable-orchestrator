@@ -19,6 +19,7 @@ import os
 import shutil
 import subprocess
 import sys
+import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -217,6 +218,24 @@ def list_critics(host: str, allow: list[str]) -> dict:
     return {"host": host, "role": "critic", "critics": critics}
 
 
+def claude_spawn_line(slug: str) -> str:
+    return f"claude -p --model {slug} --max-turns 1"
+
+
+def line_hash(line: str) -> str:
+    return hashlib.sha256(line.encode("utf-8")).hexdigest()[:16]
+
+
+def patch_stamp(**fields: object) -> dict | None:
+    stamp = load_list_stamp()
+    if not stamp:
+        return None
+    stamp.update(fields)
+    STATE.mkdir(parents=True, exist_ok=True)
+    LIST_STAMP.write_text(json.dumps(stamp), encoding="utf-8")
+    return stamp
+
+
 def session_id() -> str:
     return (
         os.environ.get("CONSULT_SESSION")
@@ -363,6 +382,7 @@ def main() -> int:
     ap.add_argument("--read-only", action="store_true")
     ap.add_argument("--fallback-used", action="store_true")
     ap.add_argument("--print-spawn", action="store_true", help="print Grok claude -p line; requires --list")
+    ap.add_argument("--spawn-line", default="", help="exact --print-spawn stdout; required with --record")
     args = ap.parse_args()
     host = detect_host()
     allow = allowlist(host)
@@ -405,10 +425,20 @@ def main() -> int:
                 file=sys.stderr,
             )
             return 2
-        print(f"claude -p --model {slug} --max-turns 1")
+        line = claude_spawn_line(slug)
+        if not patch_stamp(spawn_line=line, spawn_hash=line_hash(line), spawn_name=args.name.lower()):
+            print("run --list first this turn", file=sys.stderr)
+            return 2
+        print(line)
         return 0
     if args.record:
         if not require_listed(args.name):
+            return 2
+        stamp = load_list_stamp() or {}
+        want = stamp.get("spawn_hash")
+        got_line = args.spawn_line.strip()
+        if not want or not got_line or line_hash(got_line) != want:
+            print("pass --spawn-line from this turn's --print-spawn", file=sys.stderr)
             return 2
         rec = {
             "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -420,6 +450,7 @@ def main() -> int:
             "spawn_ok": args.ok,
             "read_only": args.read_only,
             "listed": True,
+            "spawn_hash": want,
         }
         path = record(rec)
         if args.json:

@@ -1,12 +1,12 @@
 ---
 name: orchestrator-consultant-gate
-version: 1.22.0
+version: 1.23.0
 kind: skill
 license: MIT
 compatibility: Any host that can spawn a read-only child (Cursor Task, Claude Code Agent, Codex, Grok TUI, …).
 metadata:
   author: dalsoop
-  version: "1.22.0"
+  version: "1.23.0"
   locale: en
 description: >-
   Ask a read-only second opinion on the plan after a work order, before the
@@ -52,7 +52,7 @@ If spawn is blocked, fallback once or skip. A skipped gate has no effect. A gate
 
 ## Check
 
-Keep this session. **Must this turn, before spawn:** `--list --json`. Pick a `selectable` name. Do not spawn without that list. `--list` stamps this session (`CONSULT_SESSION`, else `GROK_SESSION_ID` / `CLAUDE_SESSION`) for 3600 seconds. `--record` and `--print-spawn` exit 2 if that stamp is missing, stale, or from another session. Default is fable. Blocked pick is opus 4.6. `--report` is **usage history** (spawn receipts), not critic quality. Default `python3 eval/run.py` is static. Set `EVAL_LIVE=1` only when the user asked for a live consult. Live calls cost tokens. Without `EVAL_LIVE=1` the live harness does not spawn.
+Keep this session. **Must this turn, before spawn:** `--list --json`. Pick a `selectable` name. Do not spawn without that list. `--list` stamps this session (`CONSULT_SESSION`, else `GROK_SESSION_ID` / `CLAUDE_SESSION`) for 3600 seconds. That stamp is **mistake-prevention, not a sandbox**; another process can set `CONSULT_SESSION`. `--print-spawn` is **Grok only**. Cursor and Claude Code spawn with Task/Agent. `--record` and `--print-spawn` exit 2 if that stamp is missing, stale, or from another session. `--record` also needs `--spawn-line` equal to this turn's `--print-spawn` stdout. Default is fable. Blocked pick is opus 4.6. `--report` is **usage history** (spawn receipts), not critic quality. Default `python3 eval/run.py` is static. Set `EVAL_LIVE=1` only when the user asked for a live consult. Live calls cost tokens. Without `EVAL_LIVE=1` the live harness does not spawn.
 
 ```bash
 python3 scripts/resolve-consult.py --list --json
@@ -80,6 +80,6 @@ Cursor: `Task({ description: "Consult", subagent_type: "generalPurpose", model: 
 The **parent agent** fills `templates/digest.md` after the consult returns. Done when every item is accept / reject / defer + reason; report `min(code score, reachable ceiling)`; user hears `host` + `registry` + `slug` + `spawn_ok` + `read_only` + `fallback_used`. Ceiling is external. Do not add a files score to a live-spawn score. A consult with no rebuttal is not done. Do not treat the consult as ground truth.
 
 ```bash
-python3 scripts/resolve-consult.py --record --ok --read-only
-python3 scripts/resolve-consult.py --record --ok --read-only --fallback-used
+python3 scripts/resolve-consult.py --record --ok --read-only --spawn-line "$line"
+python3 scripts/resolve-consult.py --record --ok --read-only --fallback-used --spawn-line "$line"
 ```
